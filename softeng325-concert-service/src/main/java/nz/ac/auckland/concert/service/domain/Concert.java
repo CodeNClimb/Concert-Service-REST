@@ -26,11 +26,11 @@ public class Concert {
     private Set<LocalDateTime> dates;
 
     @ElementCollection
+    @CollectionTable(name = "CONCERT_TARIFS", joinColumns = @JoinColumn(name = "CONCERT_ID"))
     @MapKeyColumn(name = "PRICE_BAND")
     @Column(name = "PRICE")
     @MapKeyClass(PriceBand.class)
     @MapKeyEnumerated(EnumType.STRING)
-    @CollectionTable(name = "CONCERT_TARIFS", joinColumns = @JoinColumn(name = "CONCERT_ID"))
     private Map<PriceBand, BigDecimal> prices;
 
     @ManyToMany(cascade = CascadeType.PERSIST)
