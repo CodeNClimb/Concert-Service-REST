@@ -3,6 +3,7 @@ package nz.ac.auckland.concert.service.domain;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "USERS")
 public class User {
 
     @Id

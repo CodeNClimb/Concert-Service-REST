@@ -23,7 +23,7 @@ public class Performer  {
     @Column(name = "GENRE")
     private String genre;
 
-    @ManyToMany(mappedBy = "concerts")
+    @ManyToMany(mappedBy = "performers")
     private Set<Concert> concerts;
 
     public long getId() {

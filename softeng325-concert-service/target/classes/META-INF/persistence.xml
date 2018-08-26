@@ -23,6 +23,9 @@
 	     
 	<persistence-unit name="nz.ac.auckland.concert">
 		<!-- Specify each class to map using a class element -->
+		<class>service.domain.Concert</class>
+		<class>service.domain.Performer</class>
+		<class>service.domain.User</class>
 
 		<properties>
 			<!--  Configure the data source. In this case the embedded H2 database

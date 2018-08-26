@@ -4,6 +4,7 @@ import nz.ac.auckland.concert.common.dto.*;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 import java.awt.*;
 import java.util.Set;
 
@@ -22,6 +23,10 @@ public class DefaultService implements ConcertService {
 
     @Override
     public Set<ConcertDTO> getConcerts() throws ServiceException {
+
+        Response res = _client.target("http://localhost:10000/services/concerts/").request().get();
+        System.out.println(res.getStatus());
+
         return null;
     }
 

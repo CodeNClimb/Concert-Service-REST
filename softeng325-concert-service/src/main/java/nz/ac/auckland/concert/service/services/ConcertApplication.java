@@ -9,9 +9,11 @@ import java.util.Set;
 public class ConcertApplication extends Application {
 
     private Set<Object> _singletons = new HashSet<>();
+    private Set<Class<?>> _classes = new HashSet<>();
 
     public ConcertApplication() {
-        _singletons.add(new ConcertResource());
+        _singletons.add(PersistenceManager.instance());
+        _classes.add(ConcertResource.class);
     }
 
     @Override
@@ -21,7 +23,7 @@ public class ConcertApplication extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
-        return super.getClasses();
+        return _classes;
     }
 
 

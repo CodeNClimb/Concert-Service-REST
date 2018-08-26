@@ -1,8 +1,12 @@
 package nz.ac.auckland.concert.service.domain;
 
-import nz.ac.auckland.concert.common.types.Genre;
+import nz.ac.auckland.concert.common.types.PriceBand;
+import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -16,11 +20,18 @@ public class Concert {
     @Column(name = "ID")
     private long id;
 
-    @Column(name = "GENRE")
-    private Genre genre;
+    @ElementCollection
+    @CollectionTable(name = "CONCERT_DATES")
+    @Convert(converter = LocalDateTimeConverter.class)
+    private Set<LocalDateTime> dates;
 
-    @Column(name = "IMAGE_NAME")
-    private String imageName;
+    @ElementCollection
+    @MapKeyColumn(name = "PRICE_BAND")
+    @Column(name = "PRICE")
+    @MapKeyClass(PriceBand.class)
+    @MapKeyEnumerated(EnumType.STRING)
+    @CollectionTable(name = "CONCERT_TARIFS", joinColumns = @JoinColumn(name = "CONCERT_ID"))
+    private Map<PriceBand, BigDecimal> prices;
 
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
@@ -30,6 +41,8 @@ public class Concert {
     )
     private Set<Performer> performers;
 
+
+
     public long getId() {
         return id;
     }
@@ -38,27 +51,23 @@ public class Concert {
         this.id = id;
     }
 
-    public Genre getGenre() {
-        return genre;
-    }
-
-    public void setGenre(Genre genre) {
-        this.genre = genre;
-    }
-
-    public String getImageName() {
-        return imageName;
-    }
-
-    public void setImageName(String imageName) {
-        this.imageName = imageName;
-    }
-
-    public Set<Performer> getPerformers() {
-        return performers;
-    }
-
     public void setPerformers(Set<Performer> performers) {
         this.performers = performers;
+    }
+
+    public Set<LocalDateTime> getDates() {
+        return dates;
+    }
+
+    public void setDates(Set<LocalDateTime> dates) {
+        this.dates = dates;
+    }
+
+    public Map<PriceBand, BigDecimal> getPrices() {
+        return prices;
+    }
+
+    public void setPrices(Map<PriceBand, BigDecimal> prices) {
+        this.prices = prices;
     }
 }
