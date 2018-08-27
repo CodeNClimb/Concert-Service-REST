@@ -30,4 +30,26 @@ public class Performer  {
 
     @ManyToMany(mappedBy = "performers")
     private Set<Concert> concerts;
+
+
+    public long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+
+    public String getImageName() {
+        return imageName;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public Set<Concert> getConcerts() {
+        return concerts;
+    }
 }
