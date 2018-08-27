@@ -6,8 +6,11 @@ import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Mappers.ConcertMapper;
 import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
+import nz.ac.auckland.concert.service.domain.Mappers.UserMapper;
 import nz.ac.auckland.concert.service.domain.Performer;
+import nz.ac.auckland.concert.service.domain.User;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
@@ -95,11 +98,27 @@ public class ConcertResource {
         EntityManager em = _pm.createEntityManager();
 
         try {
-            
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+
+            User newUser = UserMapper.toDomain(userDto);
+            em.persist(newUser);
+
+            tx.commit();
+
+            User storedUser = em.find(User.class, userDto.getUsername());
+            UserDTO returnDTO = UserMapper.toDTO(storedUser);
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(returnDTO)
+                    .build();
+        } catch (EntityExistsException e) {
+            return Response.status(Response.Status.CONFLICT).build();
+        } catch (NullPointerException e) {
+            return Response.status(422).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
         } finally {
             em.close();
         }
-        return null;
     }
 
 

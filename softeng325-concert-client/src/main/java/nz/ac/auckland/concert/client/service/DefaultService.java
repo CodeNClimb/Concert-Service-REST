@@ -3,10 +3,13 @@ package nz.ac.auckland.concert.client.service;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 
+import javax.jws.soap.SOAPBinding;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.awt.*;
 import java.util.Set;
@@ -47,7 +50,9 @@ public class DefaultService implements ConcertService {
 
     @Override
     public UserDTO createUser(UserDTO newUser) throws ServiceException {
-        return null;
+
+        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users").request().accept(MediaType.APPLICATION_XML).post(Entity.xml(newUser));
+        return res.readEntity(UserDTO.class);
     }
 
     @Override
