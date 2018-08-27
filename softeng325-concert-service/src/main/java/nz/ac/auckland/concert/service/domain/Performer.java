@@ -10,7 +10,7 @@ public class Performer  {
     public Performer() {}
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     @Column(name = "ID")
     private long id;
 
