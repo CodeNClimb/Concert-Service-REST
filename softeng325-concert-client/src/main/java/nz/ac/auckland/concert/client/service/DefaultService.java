@@ -1,14 +1,11 @@
 package nz.ac.auckland.concert.client.service;
 
 import nz.ac.auckland.concert.common.dto.*;
-import nz.ac.auckland.concert.common.types.PriceBand;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import java.awt.*;
-import java.util.List;
 import java.util.Set;
 
 public class DefaultService implements ConcertService {
@@ -18,8 +15,7 @@ public class DefaultService implements ConcertService {
 
     public DefaultService() {
 
-        // TODO: Probably find a better way of doing this
-        _client = ClientBuilder.newClient();
+        _client = Config.DEFAULT_CLIENT;
 
     }
 
@@ -27,14 +23,14 @@ public class DefaultService implements ConcertService {
     @Override
     public Set<ConcertDTO> getConcerts() throws ServiceException {
 
-        Response res = _client.target("http://localhost:10000/services/resources/concerts").request().get();
+        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts").request().get();
         return res.readEntity(new GenericType<Set<ConcertDTO>>() {});
     }
 
     @Override
     public Set<PerformerDTO> getPerformers() throws ServiceException {
 
-        Response res = _client.target("http://localhost:10000/services/resources/performers").request().get();
+        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers").request().get();
         return res.readEntity(new GenericType<Set<PerformerDTO>>() {});
     }
 
