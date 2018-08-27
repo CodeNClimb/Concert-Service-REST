@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.Map;
 
 import nz.ac.auckland.concert.common.jaxb.LocalDateTimeAdapter;
-import nz.ac.auckland.concert.common.jaxb.MapAdapter;
 import nz.ac.auckland.concert.common.types.PriceBand;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -46,7 +45,6 @@ public class ConcertDTO {
 	@XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)
 	private Set<LocalDateTime> _dates;
 
-	//@XmlJavaTypeAdapter(value = MapAdapter.class)
 	private Map<PriceBand, BigDecimal> _tariff;
 
 	@XmlAttribute(name = "performer-ids")
