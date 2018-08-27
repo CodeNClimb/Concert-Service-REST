@@ -8,10 +8,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 
+import nz.ac.auckland.concert.common.jaxb.LocalDateTimeAdapter;
+import nz.ac.auckland.concert.common.jaxb.MapAdapter;
 import nz.ac.auckland.concert.common.types.PriceBand;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * DTO class to represent concerts. 
@@ -27,12 +32,24 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *               (represented as a set of performer identifiers).
  *
  */
+@XmlRootElement(name = "concert")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ConcertDTO {
 
+	@XmlAttribute(name = "id")
 	private Long _id;
+
+	@XmlAttribute(name = "title")
 	private String _title;
+
+	@XmlAttribute(name = "dates")
+	@XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)
 	private Set<LocalDateTime> _dates;
+
+	//@XmlJavaTypeAdapter(value = MapAdapter.class)
 	private Map<PriceBand, BigDecimal> _tariff;
+
+	@XmlAttribute(name = "performer-ids")
 	private Set<Long> _performerIds;
 
 	public ConcertDTO() {
