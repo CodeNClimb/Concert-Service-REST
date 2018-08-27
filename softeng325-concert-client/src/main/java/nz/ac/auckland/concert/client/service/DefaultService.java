@@ -27,13 +27,15 @@ public class DefaultService implements ConcertService {
     @Override
     public Set<ConcertDTO> getConcerts() throws ServiceException {
 
-        Response res = _client.target("http://localhost:10000/services/concerts/").request().get();
+        Response res = _client.target("http://localhost:10000/services/resources/concerts").request().get();
         return res.readEntity(new GenericType<Set<ConcertDTO>>() {});
     }
 
     @Override
     public Set<PerformerDTO> getPerformers() throws ServiceException {
-        return null;
+
+        Response res = _client.target("http://localhost:10000/services/resources/performers").request().get();
+        return res.readEntity(new GenericType<Set<PerformerDTO>>() {});
     }
 
     @Override

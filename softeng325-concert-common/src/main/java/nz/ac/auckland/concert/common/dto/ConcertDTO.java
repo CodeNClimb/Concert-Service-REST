@@ -45,6 +45,7 @@ public class ConcertDTO {
 	@XmlJavaTypeAdapter(value = LocalDateTimeAdapter.class)
 	private Set<LocalDateTime> _dates;
 
+	@XmlElementWrapper(name = "prices")
 	private Map<PriceBand, BigDecimal> _tariff;
 
 	@XmlAttribute(name = "performer-ids")

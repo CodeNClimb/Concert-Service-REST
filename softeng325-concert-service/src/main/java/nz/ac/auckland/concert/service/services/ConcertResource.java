@@ -1,14 +1,18 @@
 package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
+import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Mappers.ConcertMapper;
+import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
+import nz.ac.auckland.concert.service.domain.Performer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -16,7 +20,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Path("/concerts")
+@Path("/resources")
 public class ConcertResource {
 
     private final PersistenceManager _pm;
@@ -29,6 +33,7 @@ public class ConcertResource {
 
 
     @GET
+    @Path("/concerts")
     @Produces(MediaType.APPLICATION_XML)
     public Response getConcerts() {
 
@@ -45,6 +50,34 @@ public class ConcertResource {
 
             List<ConcertDTO> concertDTOs = concerts.stream().map(ConcertMapper::doDto).collect(Collectors.toList());
             GenericEntity<List<ConcertDTO>> entity = new GenericEntity<List<ConcertDTO>>(concertDTOs) {};
+
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(entity)
+                    .build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @GET
+    @Path("/performers")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getPerformers() {
+
+        EntityManager em = _pm.createEntityManager();
+
+        try {
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+
+            TypedQuery<Performer> q = em.createQuery("SELECT p FROM Performer p", Performer.class);
+            List<Performer> performers = q.getResultList();
+
+            tx.commit();
+
+            List<PerformerDTO> performerDTOs = performers.stream().map(PerformerMapper::toDto).collect(Collectors.toList());
+            GenericEntity<List<PerformerDTO>> entity = new GenericEntity<List<PerformerDTO>>(performerDTOs) {};
 
             return Response
                     .status(Response.Status.OK)

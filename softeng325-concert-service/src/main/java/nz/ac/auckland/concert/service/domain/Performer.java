@@ -1,7 +1,11 @@
 package nz.ac.auckland.concert.service.domain;
 
+import nz.ac.auckland.concert.common.types.Genre;
+
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "PERFORMERS")
@@ -25,7 +29,8 @@ public class Performer  {
 
 
     @Column(name = "GENRE")
-    private String genre;
+    @Enumerated(EnumType.STRING)
+    private Genre genre;
 
 
     @ManyToMany(mappedBy = "performers")
@@ -45,11 +50,15 @@ public class Performer  {
         return imageName;
     }
 
-    public String getGenre() {
+    public Genre getGenre() {
         return genre;
     }
 
     public Set<Concert> getConcerts() {
         return concerts;
+    }
+
+    public Set<Long> getConcertIds() {
+        return concerts.stream().map(Concert::getId).collect(Collectors.toSet());
     }
 }
