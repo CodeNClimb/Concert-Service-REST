@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
+import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Mappers.ConcertMapper;
 import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
@@ -10,10 +11,7 @@ import nz.ac.auckland.concert.service.domain.Performer;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -87,5 +85,23 @@ public class ConcertResource {
             em.close();
         }
     }
+
+    @POST
+    @Path("/users")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response createUser(UserDTO userDto) {
+
+        EntityManager em = _pm.createEntityManager();
+
+        try {
+            
+        } finally {
+            em.close();
+        }
+        return null;
+    }
+
+
 
 }
