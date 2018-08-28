@@ -10,10 +10,7 @@ import nz.ac.auckland.concert.service.domain.Mappers.UserMapper;
 import nz.ac.auckland.concert.service.domain.Performer;
 import nz.ac.auckland.concert.service.domain.User;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -95,6 +92,10 @@ public class ConcertResource {
     @Produces(MediaType.APPLICATION_XML)
     public Response createUser(UserDTO userDto) {
 
+        if (userDto.getLastname() == null || userDto.getFirstname() == null || // If any necessary fields are not given
+                userDto.getUsername() == null || userDto.getPassword() == null)
+            return Response.status(422).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
+
         EntityManager em = _pm.createEntityManager();
 
         try {
@@ -105,17 +106,18 @@ public class ConcertResource {
             em.persist(newUser);
 
             tx.commit();
+            tx.begin();
+
 
             User storedUser = em.find(User.class, userDto.getUsername());
             UserDTO returnDTO = UserMapper.toDTO(storedUser);
+
             return Response
                     .status(Response.Status.OK)
                     .entity(returnDTO)
                     .build();
-        } catch (EntityExistsException e) {
+        } catch (RollbackException e) {
             return Response.status(Response.Status.CONFLICT).build();
-        } catch (NullPointerException e) {
-            return Response.status(422).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
         } finally {
             em.close();
         }

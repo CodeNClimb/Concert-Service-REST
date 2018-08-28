@@ -15,7 +15,6 @@ public class User {
         this.lastName = lastName;
     }
 
-    @Id
     @Column(name = "FIRST_NAME")
     private String firstName;
 
@@ -24,6 +23,7 @@ public class User {
     private String lastName;
 
 
+    @Id
     @Column(name = "USERNAME")
     private String username;
 

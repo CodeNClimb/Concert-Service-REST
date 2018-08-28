@@ -3,7 +3,6 @@ package nz.ac.auckland.concert.client.service;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 
-import javax.jws.soap.SOAPBinding;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Client;
@@ -49,10 +48,21 @@ public class DefaultService implements ConcertService {
     }
 
     @Override
-    public UserDTO createUser(UserDTO newUser) throws ServiceException {
+    public UserDTO createUser(UserDTO newUser) throws ServiceException { // TODO: Authenticate user when implemented//////////////////////////////////////////////////////
 
-        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users").request().accept(MediaType.APPLICATION_XML).post(Entity.xml(newUser));
-        return res.readEntity(UserDTO.class);
+        try {
+            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users").request()
+                    .accept(MediaType.APPLICATION_XML).post(Entity.xml(newUser));
+
+            switch(res.getStatus()) {
+                case 409: throw new ServiceException(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME); // Username conflict
+                case 422: throw new ServiceException(Messages.CREATE_USER_WITH_MISSING_FIELDS); // Incomplete fields
+            }
+
+            return res.readEntity(UserDTO.class);
+        } catch (ServiceUnavailableException | ProcessingException e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
     }
 
     @Override
