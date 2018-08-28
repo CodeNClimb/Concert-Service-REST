@@ -8,18 +8,26 @@ import nz.ac.auckland.concert.service.domain.Mappers.ConcertMapper;
 import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.domain.Mappers.UserMapper;
 import nz.ac.auckland.concert.service.domain.Performer;
+import nz.ac.auckland.concert.service.domain.Token;
 import nz.ac.auckland.concert.service.domain.User;
 
-import javax.persistence.*;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.RollbackException;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Path("/resources")
 public class ConcertResource {
+
+    private static final long AUTHENTICATION_TIMEOUT_MILLISECONDS = 300000; // 300,000ms = 5 minutes
 
     private final PersistenceManager _pm;
 
@@ -29,6 +37,7 @@ public class ConcertResource {
 
     }
 
+    // TODO: LOGGINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
     @GET
     @Path("/concerts")
@@ -94,7 +103,7 @@ public class ConcertResource {
 
         if (userDto.getLastname() == null || userDto.getFirstname() == null || // If any necessary fields are not given
                 userDto.getUsername() == null || userDto.getPassword() == null)
-            return Response.status(422).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
+            return Response.status(422).entity(userDto).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
 
         EntityManager em = _pm.createEntityManager();
 
@@ -117,12 +126,57 @@ public class ConcertResource {
                     .entity(returnDTO)
                     .build();
         } catch (RollbackException e) {
-            return Response.status(Response.Status.CONFLICT).build();
+            return Response.status(Response.Status.CONFLICT).entity(userDto).build();
         } finally {
             em.close();
         }
     }
 
+    @POST
+    @Path("/users/login")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response authenticateUser(UserDTO userDTO) {
 
+        if (userDTO.getUsername() == null || userDTO.getPassword() == null) // If either username or password is empty
+            return Response.status(422).entity(userDTO).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
+
+        System.out.println(1);
+
+        EntityManager em = _pm.createEntityManager();
+
+        // Check login details are correct
+        User foundUser = em.find(User.class, userDTO.getUsername());
+        if (!foundUser.getPassword().equals(userDTO.getPassword())) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity(userDTO).build();
+        }
+
+        System.out.println(2);
+
+        // Login is correct, so we return token either newly generated or already one stored if still active.
+        Token token = em.find(Token.class, foundUser.getUsername()); // One token for one user
+
+        // either token does not exist for this user or has timed out
+        String tokenString;
+        if (token == null ||
+                (new Date().getTime() - token.getTimeStamp().getTime()) > AUTHENTICATION_TIMEOUT_MILLISECONDS) {
+            tokenString = generateUserToken();
+        } else {
+            tokenString = token.getToken();
+        }
+
+        System.out.println(3);
+
+        return Response
+                .ok(Response.Status.OK)
+                .header("Authorization:", tokenString) // place auth token in header under Authorization:
+                .entity(UserMapper.toDTO(foundUser))
+                .build();
+
+    }
+
+    private String generateUserToken() {
+        return UUID.randomUUID().toString();
+    }
 
 }

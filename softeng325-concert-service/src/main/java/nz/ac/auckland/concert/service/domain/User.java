@@ -32,7 +32,6 @@ public class User {
     private String password;
 
 
-
     public String getFirstName() {
         return firstName;
     }

@@ -67,6 +67,12 @@ public class DefaultService implements ConcertService {
 
     @Override
     public UserDTO authenticateUser(UserDTO user) throws ServiceException {
+
+        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/login").request()
+                .accept(MediaType.APPLICATION_XML).post(Entity.xml(user));
+
+        System.out.println("STATUS: " + res.getStatus());
+
         return null;
     }
 
