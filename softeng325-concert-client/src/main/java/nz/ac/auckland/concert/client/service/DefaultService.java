@@ -50,7 +50,7 @@ public class DefaultService implements ConcertService {
     }
 
     @Override
-    public UserDTO createUser(UserDTO newUser) throws ServiceException { // TODO: Authenticate user when implemented//////////////////////////////////////////////////////
+    public UserDTO createUser(UserDTO newUser) throws ServiceException {
 
         try {
             Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users").request()

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Path("/resources")
 public class ConcertResource {
 
-    private static final long AUTHENTICATION_TIMEOUT_MINUTES = 60; // 1 hour
+    private static final long AUTHENTICATION_TIMEOUT_MINUTES = 5; // 5 minutes
 
     private final PersistenceManager _pm;
 

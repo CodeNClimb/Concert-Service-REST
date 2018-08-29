@@ -213,19 +213,6 @@ public class ConcertServiceTest {
 	}
 
 	@Test
-	public void testAuthenticateUserGivesSameTokenAsCreation() {
-		try {
-			UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
-
-			UserDTO credentials = new UserDTO("Bulldog", null);
-			_service.authenticateUser(credentials);
-			fail();
-		} catch(ServiceException e) {
-			assertEquals(Messages.AUTHENTICATE_USER_WITH_MISSING_FIELDS, e.getMessage());
-		}
-	}
-
-	@Test
 	public void testMakeReservation() {
 		try {
 			final int numberOfSeatsToBook = 2;
