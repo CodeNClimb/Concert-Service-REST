@@ -19,7 +19,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @Path("/resources")
 public class ConcertResource {
 
-    private static final long AUTHENTICATION_TIMEOUT_MILLISECONDS = 300000; // 300,000ms = 5 minutes
+    private static final long AUTHENTICATION_TIMEOUT_MINUTES = 60; // 1 hour
 
     private final PersistenceManager _pm;
 
@@ -114,15 +115,18 @@ public class ConcertResource {
             User newUser = UserMapper.toDomain(userDto);
             em.persist(newUser);
 
+            String token = generateUserToken();
+            em.persist(new Token(newUser, token, LocalDateTime.now())); // Create and persist auth. token for user
+
             tx.commit();
             tx.begin();
-
 
             User storedUser = em.find(User.class, userDto.getUsername());
             UserDTO returnDTO = UserMapper.toDTO(storedUser);
 
             return Response
                     .status(Response.Status.OK)
+                    .header("Authorization", token) // place auth token in header under Authorization:
                     .entity(returnDTO)
                     .build();
         } catch (RollbackException e) {
@@ -141,39 +145,53 @@ public class ConcertResource {
         if (userDTO.getUsername() == null || userDTO.getPassword() == null) // If either username or password is empty
             return Response.status(422).entity(userDTO).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
 
-        System.out.println(1);
-
         EntityManager em = _pm.createEntityManager();
 
-        // Check login details are correct
-        User foundUser = em.find(User.class, userDTO.getUsername());
-        if (!foundUser.getPassword().equals(userDTO.getPassword())) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(userDTO).build();
+        try {
+            // Check login details are correct
+            User foundUser = em.find(User.class, userDTO.getUsername());
+            if (foundUser == null) {// No user found
+                return Response.status(Response.Status.NOT_FOUND).entity(userDTO).build();
+            } else if (!foundUser.getPassword().equals(userDTO.getPassword())) { // Login credentials incorrect
+                return Response.status(Response.Status.UNAUTHORIZED).entity(userDTO).build();
+            }
+
+            // Login is correct, so we return token either newly generated or already one stored if still active.
+            Token token = em.find(Token.class, foundUser.getUsername()); // One token for one user
+
+            // either token does not exist for this user or has timed out - if has timed out service should provide a new one
+            String tokenString;
+            if (token == null || // TODO: Test with expired timestamp
+                    (ChronoUnit.MINUTES.between(token.getTimeStamp(), LocalDateTime.now())) > AUTHENTICATION_TIMEOUT_MINUTES) {
+
+                if (token != null) // Remove the current token if one exists
+                    em.remove(token);
+
+                tokenString = generateUserToken();
+
+                // Place new token into db
+                EntityTransaction tx = em.getTransaction();
+                tx.begin();
+
+                Token tokenToPlace = new Token(foundUser, tokenString, LocalDateTime.now());
+                em.persist(tokenToPlace);
+
+                tx.commit();
+            } else { // Token stored in db both exists and is still valid
+                tokenString = token.getToken(); // Add existing token to response
+            }
+
+            return Response
+                    .status(Response.Status.OK)
+                    .header("Authorization", tokenString) // place auth token in header under Authorization:
+                    .entity(UserMapper.toDTO(foundUser))
+                    .build();
+        } finally {
+            em.close();
         }
-
-        System.out.println(2);
-
-        // Login is correct, so we return token either newly generated or already one stored if still active.
-        Token token = em.find(Token.class, foundUser.getUsername()); // One token for one user
-
-        // either token does not exist for this user or has timed out
-        String tokenString;
-        if (token == null ||
-                (new Date().getTime() - token.getTimeStamp().getTime()) > AUTHENTICATION_TIMEOUT_MILLISECONDS) {
-            tokenString = generateUserToken();
-        } else {
-            tokenString = token.getToken();
-        }
-
-        System.out.println(3);
-
-        return Response
-                .ok(Response.Status.OK)
-                .header("Authorization:", tokenString) // place auth token in header under Authorization:
-                .entity(UserMapper.toDTO(foundUser))
-                .build();
-
     }
+
+    // TODO: use HTTP 401 for timed out resources in future
 
     private String generateUserToken() {
         return UUID.randomUUID().toString();

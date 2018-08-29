@@ -17,6 +17,8 @@ public class DefaultService implements ConcertService {
 
     private static Client _client;
 
+    private String _authorizationToken;
+
 
     public DefaultService() {
 
@@ -59,6 +61,8 @@ public class DefaultService implements ConcertService {
                 case 422: throw new ServiceException(Messages.CREATE_USER_WITH_MISSING_FIELDS); // Incomplete fields
             }
 
+            _authorizationToken = res.getHeaderString("Authorization"); // Store token
+
             return res.readEntity(UserDTO.class);
         } catch (ServiceUnavailableException | ProcessingException e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
@@ -68,12 +72,22 @@ public class DefaultService implements ConcertService {
     @Override
     public UserDTO authenticateUser(UserDTO user) throws ServiceException {
 
-        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/login").request()
-                .accept(MediaType.APPLICATION_XML).post(Entity.xml(user));
+        try {
+            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/login").request()
+                    .accept(MediaType.APPLICATION_XML).post(Entity.xml(user));
 
-        System.out.println("STATUS: " + res.getStatus());
+            switch(res.getStatus()) {
+                case 401: throw new ServiceException(Messages.AUTHENTICATE_USER_WITH_ILLEGAL_PASSWORD); // Wrong password
+                case 404: throw new ServiceException(Messages.AUTHENTICATE_NON_EXISTENT_USER); // No such user exists
+                case 422: throw new ServiceException(Messages.AUTHENTICATE_USER_WITH_MISSING_FIELDS); // Missing username and/or password
+            }
 
-        return null;
+            _authorizationToken = res.getHeaderString("Authorization"); // Update/Store token
+
+            return res.readEntity(UserDTO.class);
+        } catch (ServiceUnavailableException | ProcessingException e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
     }
 
     @Override

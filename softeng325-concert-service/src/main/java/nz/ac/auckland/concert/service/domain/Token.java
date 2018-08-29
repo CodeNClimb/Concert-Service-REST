@@ -10,6 +10,14 @@ import java.util.Date;
 @Table(name = "AUTHORIZATION_TOKENS")
 public class Token {
 
+    public Token() {}
+
+    public Token(User user, String token, LocalDateTime timestamp) {
+        this.user = user;
+        this.token = token;
+        this.timeStamp = timestamp;
+    }
+
     @Id
     @Column(name = "USER_USERNAME")
     private String id;
@@ -22,11 +30,9 @@ public class Token {
     @Column(name = "TOKEN")
     private String token;
 
-    @Basic(optional = false)
-    @Column(name = "TIMESTAMP", insertable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "CREATED_AT")
     @Convert(converter = LocalDateTimeConverter.class)
-    private Date timeStamp;
+    private LocalDateTime timeStamp; // Use date for JPA's timestamp functionality
 
 
     public User getUser() {
@@ -37,7 +43,7 @@ public class Token {
         return token;
     }
 
-    public Date getTimeStamp() {
+    public LocalDateTime getTimeStamp() {
         return timeStamp;
     }
 }
