@@ -1,8 +1,17 @@
 package nz.ac.auckland.concert.client.service;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 
+import javax.imageio.ImageIO;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Client;
@@ -15,8 +24,15 @@ import java.util.Set;
 
 public class DefaultService implements ConcertService {
 
-    private static Client _client;
+    // Constants:
+    // AWS S3 access credentials for concert images.
+    private static final String AWS_ACCESS_KEY_ID = "AKIAJOG7SJ36SFVZNJMQ";
+    private static final String AWS_SECRET_ACCESS_KEY = "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";
+    // Name of the S3 bucket that stores images.
+    private static final String AWS_BUCKET = "concert2.aucklanduni.ac.nz";
 
+    // Fields
+    private Client _client;
     private String _authorizationToken;
 
 
@@ -90,9 +106,31 @@ public class DefaultService implements ConcertService {
         }
     }
 
+    // TODO : Fix error throwing with silly amazon s3 stuff
     @Override
     public Image getImageForPerformer(PerformerDTO performer) throws ServiceException {
-        return null;
+
+        try {
+            BasicAWSCredentials awsCredentials = new BasicAWSCredentials(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
+            AmazonS3 s3 = AmazonS3ClientBuilder
+                    .standard()
+                    .withRegion(Regions.AP_SOUTHEAST_2)
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                    .build();
+
+            S3Object object;
+            try {
+                object = s3.getObject(AWS_BUCKET, performer.getImageName());
+            } catch (AmazonS3Exception e) {
+                throw new ServiceException(Messages.NO_IMAGE_FOR_PERFORMER);
+            }
+            S3ObjectInputStream s3is = object.getObjectContent();
+
+            return ImageIO.read(s3is);
+        } catch (Exception e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
+
     }
 
     @Override
