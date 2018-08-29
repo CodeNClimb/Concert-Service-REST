@@ -26,10 +26,11 @@ public class DefaultService implements ConcertService {
 
     // Constants:
     // AWS S3 access credentials for concert images.
-    private static final String AWS_ACCESS_KEY_ID = "AKIAJOG7SJ36SFVZNJMQ";
-    private static final String AWS_SECRET_ACCESS_KEY = "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";
+    private static final String AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
+    private static final String AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
+
     // Name of the S3 bucket that stores images.
-    private static final String AWS_BUCKET = "concert2.aucklanduni.ac.nz";
+    private static final String AWS_BUCKET = Config.AWS_BUCKET;
 
     // Fields
     private Client _client;
@@ -130,7 +131,6 @@ public class DefaultService implements ConcertService {
         } catch (Exception e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         }
-
     }
 
     @Override
