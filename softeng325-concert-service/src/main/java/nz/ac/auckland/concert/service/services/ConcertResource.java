@@ -2,6 +2,7 @@ package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
+import nz.ac.auckland.concert.common.dto.ReservationRequestDTO;
 import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Mappers.ConcertMapper;
@@ -11,6 +12,7 @@ import nz.ac.auckland.concert.service.domain.Performer;
 import nz.ac.auckland.concert.service.domain.Token;
 import nz.ac.auckland.concert.service.domain.User;
 
+import javax.annotation.PreDestroy;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.RollbackException;
@@ -192,6 +194,17 @@ public class ConcertResource {
     }
 
     // TODO: use HTTP 401 for timed out resources in future
+
+    @POST
+    @Path("/reserve")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response reserveSeats(ReservationRequestDTO reservationRequestDto) {
+
+
+        return null;
+    }
+
 
     private String generateUserToken() {
         return UUID.randomUUID().toString();
