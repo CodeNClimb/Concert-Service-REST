@@ -167,9 +167,13 @@ public class ConcertResource {
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
     public Response createPayment(CreditCardDTO creditCard, @HeaderParam("Authorization") String authToken) {
-// TODO: bad request
+
         if (authToken == null) // User has no access token
             return Response.status(Response.Status.FORBIDDEN).build();
+
+        if (creditCard.getExpiryDate() == null || creditCard.getName() == null ||
+                creditCard.getNumber() == null || creditCard.getType() == null)
+            return Response.status(Response.Status.BAD_REQUEST).entity(creditCard).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
@@ -342,10 +346,12 @@ public class ConcertResource {
     @Produces(MediaType.APPLICATION_XML)
     public Response bookSeats(ReservationDTO reservationDto, @HeaderParam("Authorization") String authToken) {
 
-        // TODO: bad request
-
         if (authToken == null)
             return Response.status(Response.Status.FORBIDDEN).build();
+
+        if (reservationDto.getId() == null || reservationDto.getReservationRequest() == null ||
+                reservationDto.getSeats() == null || reservationDto.getSeats().isEmpty())
+            return Response.status(Response.Status.BAD_REQUEST).entity(reservationDto).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
