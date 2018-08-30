@@ -13,6 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.awt.print.Book;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -317,30 +318,37 @@ public class ConcertResource {
 
         EntityManager em = _pm.createEntityManager();
 
-        if (!tokenIsValid(authToken, em))
-            return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+        try {
+            if (!tokenIsValid(authToken, em))
+                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
 
-        EntityTransaction tx = em.getTransaction();
-        tx.begin();
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
 
-        TypedQuery<CreditCard> creditCardQuery = em.createQuery("SELECT c FROM Token t JOIN t.user u JOIN u.creditCard WHERE t.token = :token", CreditCard.class);
-        creditCardQuery.setParameter("token", authToken);
-        CreditCard creditCard = creditCardQuery.getSingleResult();
+            TypedQuery<CreditCard> creditCardQuery = em.createQuery("SELECT c FROM Token t JOIN t.user u JOIN u.creditCard c WHERE t.token = :token", CreditCard.class);
+            creditCardQuery.setParameter("token", authToken);
+            CreditCard creditCard = creditCardQuery.getSingleResult();
 
-        if (creditCard == null)
-            return Response.status(Response.Status.PAYMENT_REQUIRED).build();
+            if (creditCard == null)
+                return Response.status(Response.Status.PAYMENT_REQUIRED).build();
 
-        TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
-        reservationQuery.setParameter("token", authToken);
-        Reservation foundReservation = reservationQuery.getSingleResult();
+            TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
+            reservationQuery.setParameter("token", authToken);
+            Reservation foundReservation = reservationQuery.getSingleResult();
 
-        if (!LocalDateTime.now().isBefore(foundReservation.getExpiry()))
-            return Response.status(Response.Status.REQUEST_TIMEOUT).build();
+            if (!LocalDateTime.now().isBefore(foundReservation.getExpiry()))
+                return Response.status(Response.Status.REQUEST_TIMEOUT).build();
 
-        Booking newBooking = new Booking(foundReservation, findUser(authToken, em));
-        em.persist(newBooking);
+            Booking newBooking = new Booking(foundReservation, findUser(authToken, em));
+            em.persist(newBooking);
+            tx.commit();
 
-        return null;
+            return Response
+                    .status(Response.Status.NO_CONTENT)
+                    .build();
+        } finally {
+            em.close();
+        }
     }
 
     private boolean tokenIsValid(String authToken, EntityManager em) {

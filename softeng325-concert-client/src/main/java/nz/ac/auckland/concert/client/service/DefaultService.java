@@ -35,7 +35,7 @@ public class DefaultService implements ConcertService {
     // Fields
     private Client _client;
     private String _authorizationToken;
-    private String _username;
+    private String _username; // TODO: implement re-logging in
     private String _password;
 
 
@@ -170,6 +170,24 @@ public class DefaultService implements ConcertService {
     @Override
     public void confirmReservation(ReservationDTO reservation) throws ServiceException {
 
+        try {
+            Response res = _client
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve/book")
+                    .request()
+                    .header("Authorization", _authorizationToken) // Insert authorisation token
+                    .accept(MediaType.APPLICATION_XML)
+                    .post(Entity.xml(reservation));
+
+            switch (res.getStatus()) {
+                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
+                case 402: throw new ServiceException(Messages.CREDIT_CARD_NOT_REGISTERED);
+                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+                case 408: throw new ServiceException(Messages.EXPIRED_RESERVATION);
+            }
+
+        } catch (ServiceUnavailableException | ProcessingException e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
     }
 
     @Override
@@ -194,6 +212,8 @@ public class DefaultService implements ConcertService {
 
     @Override
     public Set<BookingDTO> getBookings() throws ServiceException {
+
+
         return null;
     }
 }
