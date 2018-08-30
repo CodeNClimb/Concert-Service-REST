@@ -32,7 +32,7 @@ public class Token {
 
     @Column(name = "CREATED_AT")
     @Convert(converter = LocalDateTimeConverter.class)
-    private LocalDateTime timeStamp; // Use date for JPA's timestamp functionality
+    private LocalDateTime timeStamp;
 
 
     public User getUser() {

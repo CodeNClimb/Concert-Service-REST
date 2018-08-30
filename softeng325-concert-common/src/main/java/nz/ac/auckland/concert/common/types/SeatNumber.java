@@ -2,24 +2,28 @@ package nz.ac.auckland.concert.common.types;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Class to represent seat numbers.
- * 
- * SeatNumber is a Number subtype that constrains values in the range 1..26. 
+ *
+ * SeatNumber is a Number subtype that constrains values in the range 1..26.
  *
  */
+@XmlRootElement(name = "seat-number")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SeatNumber extends Number {
 	private static final int MIN = 1;
 	private static final int MAX = 26;
-	
+
+	@XmlAttribute(name = "value")
 	private int _value;
-	
+
 	public SeatNumber() {}
-	
+
 	public SeatNumber(int value) throws IllegalArgumentException {
 		if(value < MIN || value > MAX) {
 			throw new IllegalArgumentException();
@@ -46,28 +50,29 @@ public class SeatNumber extends Number {
 	public double doubleValue() {
 		return _value;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof SeatNumber))
-            return false;
-        if (obj == this)
-            return true;
+			return false;
+		if (obj == this)
+			return true;
 
-        SeatNumber rhs = (SeatNumber) obj;
-        return _value == rhs._value;
+		SeatNumber rhs = (SeatNumber) obj;
+		return _value == rhs._value;
 	}
-	
+
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder(17, 31). 
-	            append(_value).
-	            hashCode();
+		return new HashCodeBuilder(17, 31).
+				append(_value).
+				hashCode();
 	}
-	
+
 	@Override
 	public String toString() {
 		return Integer.toString(_value);
 	}
-	
+
 }
+

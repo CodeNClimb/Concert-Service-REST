@@ -135,6 +135,15 @@ public class DefaultService implements ConcertService {
 
     @Override
     public ReservationDTO reserveSeats(ReservationRequestDTO reservationRequest) throws ServiceException {
+
+        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve").request()
+                .accept(MediaType.APPLICATION_XML).post(Entity.xml(reservationRequest));
+
+        ReservationDTO returned = res.readEntity(ReservationDTO.class);
+        System.out.println(returned.getId());
+        System.out.println(returned.getSeats());
+        System.out.println(returned.getReservationRequest().getConcertId());
+
         return null;
     }
 

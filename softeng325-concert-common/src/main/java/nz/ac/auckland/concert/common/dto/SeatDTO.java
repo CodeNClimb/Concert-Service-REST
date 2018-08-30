@@ -6,14 +6,15 @@ import nz.ac.auckland.concert.common.types.SeatRow;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * DTO class to represent seats at the concert venue. 
- * 
+ * DTO class to represent seats at the concert venue.
+ *
  * A SeatDTO describes a seat in terms of:
  * _row    the row of the seat.
  * _number the number of the seat.
@@ -26,7 +27,6 @@ public class SeatDTO {
 	@XmlAttribute(name = "row")
 	private SeatRow _row;
 
-	@XmlAttribute(name = "number")
 	private SeatNumber _number;
 	
 	public SeatDTO() {}

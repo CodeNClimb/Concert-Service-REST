@@ -34,10 +34,8 @@ public class ReservationDTO {
 	@XmlAttribute(name = "id")
 	private Long _id;
 
-	@XmlAttribute(name = "reservation-request")
 	private ReservationRequestDTO _request;
 
-	@XmlAttribute(name = "seats")
 	private Set<SeatDTO> _seats;
 	
 	public ReservationDTO() {}
