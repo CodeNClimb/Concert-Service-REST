@@ -5,10 +5,7 @@ import nz.ac.auckland.concert.service.domain.*;
 import nz.ac.auckland.concert.service.domain.Mappers.*;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.RollbackException;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -16,6 +13,7 @@ import javax.ws.rs.core.Response;
 import java.awt.print.Book;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -89,6 +87,38 @@ public class ConcertResource {
                     .status(Response.Status.OK)
                     .entity(entity)
                     .build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @GET
+    @Path("/users/book")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getBookings(@HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null) // User has no access token
+            return Response.status(Response.Status.FORBIDDEN).build();
+
+        EntityManager em = _pm.createEntityManager();
+
+        try {
+            if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
+                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+
+            TypedQuery<Booking> bookingQuery = em.createQuery("SELECT b FROM Token t JOIN t.user u JOIN u.bookings b WHERE t.toke = :token", Booking.class);
+            bookingQuery.setParameter("token", authToken);
+            List<Booking> bookings = bookingQuery.getResultList();
+
+            Set<BookingDTO> bookingDTOS = bookings.stream().map(BookingMapper::toDto).collect(Collectors.toSet());
+            GenericEntity<Set<BookingDTO>> entity = new GenericEntity<Set<BookingDTO>>(bookingDTOS) {};
+
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(entity)
+                    .build();
+
         } finally {
             em.close();
         }
@@ -284,7 +314,8 @@ public class ConcertResource {
                     reservedSeats.stream().map(SeatMapper::toReservation).collect(Collectors.toSet()), // Reserved seats
                     em.find(Concert.class, requestDto.getConcertId()), // Corresponding concert from db
                     requestDto.getDate(), // Given date
-                    LocalDateTime.now().plus(Duration.ofMinutes(RESERVATION_TIMEOUT_MINUTES)) // now plus given reservation timeout
+                    LocalDateTime.now().plus(Duration.ofMinutes(RESERVATION_TIMEOUT_MINUTES)), // now plus given reservation timeout
+                    requestDto.getSeatType()
             );
             User user = findUser(authToken, em);
             user.setReservation(newReservation);
@@ -372,5 +403,4 @@ public class ConcertResource {
     private String generateUserToken() {
         return UUID.randomUUID().toString();
     }
-
 }

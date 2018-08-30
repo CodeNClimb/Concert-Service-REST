@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.service.domain;
 
+import nz.ac.auckland.concert.common.types.PriceBand;
 import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
 
 import javax.persistence.*;
@@ -13,11 +14,12 @@ public class Reservation {
 
     public Reservation() {}
 
-    public Reservation(Set<SeatReservation> seats, Concert concert, LocalDateTime date, LocalDateTime expiry) {
+    public Reservation(Set<SeatReservation> seats, Concert concert, LocalDateTime date, LocalDateTime expiry, PriceBand priceBand) {
         this.seats = seats;
         this.concert = concert;
         this.date = date;
         this.expiry = expiry;
+        this.priceBand = priceBand;
     }
 
     @Id
@@ -41,6 +43,10 @@ public class Reservation {
     @Convert(converter = LocalDateTimeConverter.class)
     private LocalDateTime expiry;
 
+    @Column(name = "PRICE_BAND")
+    @Enumerated(EnumType.STRING)
+    private PriceBand priceBand;
+
     public long getId() {
         return id;
     }
@@ -59,5 +65,9 @@ public class Reservation {
 
     public LocalDateTime getExpiry() {
         return expiry;
+    }
+
+    public PriceBand getPriceBand() {
+        return priceBand;
     }
 }
