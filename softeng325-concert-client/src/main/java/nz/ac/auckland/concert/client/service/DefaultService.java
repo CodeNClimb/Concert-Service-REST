@@ -175,6 +175,21 @@ public class DefaultService implements ConcertService {
     @Override
     public void registerCreditCard(CreditCardDTO creditCard) throws ServiceException {
 
+        try {
+            Response res = _client
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/payment")
+                    .request()
+                    .header("Authorization", _authorizationToken) // Insert authorisation token
+                    .accept(MediaType.APPLICATION_XML)
+                    .post(Entity.xml(creditCard));
+
+            switch (res.getStatus()) {
+                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
+                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+        } catch (ServiceUnavailableException | ProcessingException e) {
+            throw new ServiceException((Messages.SERVICE_COMMUNICATION_ERROR));
+        }
     }
 
     @Override

@@ -2,10 +2,7 @@ package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.service.domain.*;
-import nz.ac.auckland.concert.service.domain.Mappers.ConcertMapper;
-import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
-import nz.ac.auckland.concert.service.domain.Mappers.SeatMapper;
-import nz.ac.auckland.concert.service.domain.Mappers.UserMapper;
+import nz.ac.auckland.concert.service.domain.Mappers.*;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
 
 import javax.persistence.EntityManager;
@@ -147,12 +144,27 @@ public class ConcertResource {
 
         EntityManager em = _pm.createEntityManager();
 
-        if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
-            return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+        try {
+            if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
+                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
 
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
 
+            TypedQuery<User> userQuery = em.createQuery("SELECT u FROM Token t JOIN t.user u WHERE t.token = :token", User.class);
+            userQuery.setParameter("token", authToken);
+            User foundUser = userQuery.getSingleResult();
 
-        return null;
+            foundUser.setCreditCard(CreditCardMapper.toDomain(creditCard));
+            em.merge(foundUser);
+            tx.commit();
+
+            return Response
+                    .status(Response.Status.NO_CONTENT)
+                    .build();
+        } finally {
+            em.close();
+        }
     }
 
     @POST
