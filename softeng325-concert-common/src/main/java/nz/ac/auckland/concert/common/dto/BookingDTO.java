@@ -10,6 +10,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import nz.ac.auckland.concert.common.types.PriceBand;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * DTO class to represent bookings (confirmed reservations). 
  * 
@@ -24,12 +29,22 @@ import nz.ac.auckland.concert.common.types.PriceBand;
  *                 same price band).
  *
  */
+@XmlRootElement(name = "booking")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class BookingDTO {
 
+	@XmlAttribute(name = "concert-id")
 	private Long _concertId;
+
+	@XmlAttribute(name = "concert-title")
 	private String _concertTitle;
+
+	@XmlAttribute(name = "concert-date-time")
 	private LocalDateTime _dateTime;
+
 	private Set<SeatDTO> _seats;
+
+	@XmlAttribute(name = "price-band")
 	private PriceBand _priceBand;
 
 	public BookingDTO() {
