@@ -116,6 +116,7 @@ public class DefaultService implements ConcertService {
     }
 
     // TODO : Fix error throwing with silly amazon s3 stuff
+    // TODO : Move to service
     @Override
     public Image getImageForPerformer(PerformerDTO performer) throws ServiceException {
 

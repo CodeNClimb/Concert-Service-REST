@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.common.dto.*;
+import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.*;
 import nz.ac.auckland.concert.service.domain.Mappers.*;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
@@ -97,13 +98,13 @@ public class ConcertResource {
     public Response getBookings(@HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) // User has no access token
-            return Response.status(Response.Status.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
 
         EntityManager em = _pm.createEntityManager();
 
         try {
             if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
-                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
 
             TypedQuery<Booking> bookingQuery = em.createQuery("SELECT b FROM Token t JOIN t.user u JOIN u.bookings b WHERE t.token = :token", Booking.class);
             bookingQuery.setParameter("token", authToken);
@@ -130,7 +131,7 @@ public class ConcertResource {
 
         if (userDto.getLastname() == null || userDto.getFirstname() == null || // If any necessary fields are not given
                 userDto.getUsername() == null || userDto.getPassword() == null)
-            return Response.status(Response.Status.BAD_REQUEST).entity(userDto).build(); // Bad request
+            return Response.status(Response.Status.BAD_REQUEST).entity(Messages.CREATE_USER_WITH_MISSING_FIELDS).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
@@ -156,7 +157,7 @@ public class ConcertResource {
                     .entity(returnDTO)
                     .build();
         } catch (RollbackException e) {
-            return Response.status(Response.Status.CONFLICT).entity(userDto).build();
+            return Response.status(Response.Status.CONFLICT).entity(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME).build();
         } finally {
             em.close();
         }
@@ -169,17 +170,13 @@ public class ConcertResource {
     public Response createPayment(CreditCardDTO creditCard, @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) // User has no access token
-            return Response.status(Response.Status.FORBIDDEN).build();
-
-        if (creditCard.getExpiryDate() == null || creditCard.getName() == null ||
-                creditCard.getNumber() == null || creditCard.getType() == null)
-            return Response.status(Response.Status.BAD_REQUEST).entity(creditCard).build(); // Bad request
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
 
         EntityManager em = _pm.createEntityManager();
 
         try {
             if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
-                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
 
             EntityTransaction tx = em.getTransaction();
             tx.begin();
@@ -205,7 +202,7 @@ public class ConcertResource {
     public Response authenticateUser(UserDTO userDTO) {
 
         if (userDTO.getUsername() == null || userDTO.getPassword() == null) // If either username or password is empty
-            return Response.status(Response.Status.BAD_REQUEST).entity(userDTO).build(); // Bad request
+            return Response.status(Response.Status.BAD_REQUEST).entity(Messages.AUTHENTICATE_USER_WITH_MISSING_FIELDS).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
@@ -213,9 +210,9 @@ public class ConcertResource {
             // Check login details are correct
             User foundUser = em.find(User.class, userDTO.getUsername());
             if (foundUser == null) {// No user found
-                return Response.status(Response.Status.NOT_FOUND).entity(userDTO).build();
+                return Response.status(Response.Status.NOT_FOUND).entity(Messages.AUTHENTICATE_NON_EXISTENT_USER).build();
             } else if (!foundUser.getPassword().equals(userDTO.getPassword())) { // Login credentials incorrect
-                return Response.status(Response.Status.UNAUTHORIZED).entity(userDTO).build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.AUTHENTICATE_USER_WITH_ILLEGAL_PASSWORD).build();
             }
 
             // Login is correct, so we return token either newly generated or already one stored if still active.
@@ -252,9 +249,6 @@ public class ConcertResource {
         }
     }
 
-    // TODO: use HTTP 401 for timed out resources in future
-    // TODO: test reserve with some fields already created.
-
     @POST
     @Path("/reserve")
     @Consumes(MediaType.APPLICATION_XML)
@@ -262,31 +256,30 @@ public class ConcertResource {
     public Response reserveSeats(ReservationRequestDTO requestDto, @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) // User has no access token
-            return Response.status(Response.Status.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
 
         if (requestDto.getConcertId() == null || requestDto.getDate() == null ||
                 requestDto.getNumberOfSeats() == 0 || requestDto.getSeatType() == null) // Any necessary fields are missing
-            return Response.status(Response.Status.BAD_REQUEST).entity(requestDto).build(); // Bad request
+            return Response.status(Response.Status.BAD_REQUEST).entity(Messages.RESERVATION_REQUEST_WITH_MISSING_FIELDS).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
         try {
             if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
-                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
 
             // Check that the concert in question has a corresponding date in the db.
             TypedQuery<LocalDateTime> concertDateQuery = em.createQuery("SELECT d FROM Concert c JOIN c.dates d WHERE c.id = :id", LocalDateTime.class);
             concertDateQuery.setParameter("id", requestDto.getConcertId());
             List<LocalDateTime> dates = concertDateQuery.getResultList();
             if (!dates.contains(requestDto.getDate())) // No concert was found on this date
-                return Response.status(Response.Status.NOT_FOUND).entity(requestDto).build();
+                return Response.status(Response.Status.NOT_FOUND).entity(Messages.CONCERT_NOT_SCHEDULED_ON_RESERVATION_DATE).build();
 
             EntityTransaction tx = em.getTransaction();
             tx.begin();
 
             Set<SeatDTO> unavailableSeats;
 
-            // TODO Test this but when booking is up and running
             // Get all existing bookings and current reservations for this concert on this date
             TypedQuery<SeatReservation> unavailableSeatsBookingQuery = em.createQuery("SELECT s FROM Booking b JOIN b.reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date", SeatReservation.class);
             unavailableSeatsBookingQuery.setParameter("concertId", requestDto.getConcertId());
@@ -304,12 +297,13 @@ public class ConcertResource {
             List<SeatReservation> seatsCurrentlyReserved = unavailableSeatsReservationQuery.getResultList();
 
             // Add all seats found in returned reservations to current unavailable seats
+            // If a seat is both booked AND still under valid reservation it is only added to unavailableSeats ONCE as it is a Set<>
             seatsCurrentlyReserved.stream().map(SeatMapper::toDto).forEach(unavailableSeats::add);
 
             // Acquire reserved seats
             Set<SeatDTO> reservedSeats = TheatreUtility.findAvailableSeats(requestDto.getNumberOfSeats(), requestDto.getSeatType(), unavailableSeats);
             if (reservedSeats.isEmpty()) // Not enough seats left to reserve
-                return Response.status(Response.Status.CONFLICT).build();
+                return Response.status(Response.Status.CONFLICT).entity(Messages.INSUFFICIENT_SEATS_AVAILABLE_FOR_RESERVATION).build();
 
             // Create new reservation and persist to database
             Reservation newReservation = new Reservation(
@@ -347,17 +341,13 @@ public class ConcertResource {
     public Response bookSeats(ReservationDTO reservationDto, @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null)
-            return Response.status(Response.Status.FORBIDDEN).build();
-
-        if (reservationDto.getId() == null || reservationDto.getReservationRequest() == null ||
-                reservationDto.getSeats() == null || reservationDto.getSeats().isEmpty())
-            return Response.status(Response.Status.BAD_REQUEST).entity(reservationDto).build(); // Bad request
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
 
         EntityManager em = _pm.createEntityManager();
 
         try {
             if (!tokenIsValid(authToken, em))
-                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
 
             EntityTransaction tx = em.getTransaction();
             tx.begin();
@@ -367,7 +357,7 @@ public class ConcertResource {
             try {
                 CreditCard creditCard = creditCardQuery.getSingleResult();
             } catch (NoResultException e) {
-                return Response.status(Response.Status.PAYMENT_REQUIRED).build();
+                return Response.status(Response.Status.PAYMENT_REQUIRED).entity(Messages.CREDIT_CARD_NOT_REGISTERED).build();
             }
 
             TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
@@ -375,7 +365,7 @@ public class ConcertResource {
             Reservation foundReservation = reservationQuery.getSingleResult();
 
             if (!LocalDateTime.now().isBefore(foundReservation.getExpiry()))
-                return Response.status(Response.Status.REQUEST_TIMEOUT).build();
+                return Response.status(Response.Status.REQUEST_TIMEOUT).entity(Messages.EXPIRED_RESERVATION).build();
 
             Booking newBooking = new Booking(foundReservation, findUser(authToken, em));
             em.persist(newBooking);
