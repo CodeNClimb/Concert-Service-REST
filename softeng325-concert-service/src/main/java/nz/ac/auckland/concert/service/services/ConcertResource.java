@@ -33,7 +33,6 @@ public class ConcertResource {
     }
 
     // TODO: LOGGINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
-    // TODO: Error entities should be messages silly
 
     @GET
     @Path("/concerts")

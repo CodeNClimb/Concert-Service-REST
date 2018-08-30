@@ -76,8 +76,8 @@ public class DefaultService implements ConcertService {
                     .accept(MediaType.APPLICATION_XML).post(Entity.xml(newUser));
 
             switch(res.getStatus()) {
-                case 400: throw new ServiceException(Messages.CREATE_USER_WITH_MISSING_FIELDS); // Incomplete fields
-                case 409: throw new ServiceException(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME); // Username conflict
+                case 400: throw new ServiceException(res.readEntity(String.class)); // Incomplete fields
+                case 409: throw new ServiceException(res.readEntity(String.class)); // Username conflict
             }
 
             // Store auth. details
@@ -99,9 +99,9 @@ public class DefaultService implements ConcertService {
                     .accept(MediaType.APPLICATION_XML).post(Entity.xml(user));
 
             switch(res.getStatus()) {
-                case 400: throw new ServiceException(Messages.AUTHENTICATE_USER_WITH_MISSING_FIELDS); // Missing username and/or password
-                case 401: throw new ServiceException(Messages.AUTHENTICATE_USER_WITH_ILLEGAL_PASSWORD); // Wrong password
-                case 404: throw new ServiceException(Messages.AUTHENTICATE_NON_EXISTENT_USER); // No such user exists
+                case 400: throw new ServiceException(res.readEntity(String.class)); // Missing username and/or password
+                case 401: throw new ServiceException(res.readEntity(String.class)); // Wrong password
+                case 404: throw new ServiceException(res.readEntity(String.class)); // No such user exists
             }
 
             // Store auth. details
@@ -154,11 +154,11 @@ public class DefaultService implements ConcertService {
                     .post(Entity.xml(reservationRequest));
 
             switch(res.getStatus()) {
-                case 400: throw new ServiceException(Messages.RESERVATION_REQUEST_WITH_MISSING_FIELDS);
-                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
-                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
-                case 404: throw new ServiceException(Messages.CONCERT_NOT_SCHEDULED_ON_RESERVATION_DATE);
-                case 409: throw new ServiceException(Messages.INSUFFICIENT_SEATS_AVAILABLE_FOR_RESERVATION);
+                case 400: throw new ServiceException(res.readEntity(String.class));
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
+                case 404: throw new ServiceException(res.readEntity(String.class));
+                case 409: throw new ServiceException(res.readEntity(String.class));
 
             }
 
@@ -180,10 +180,10 @@ public class DefaultService implements ConcertService {
                     .post(Entity.xml(reservation));
 
             switch (res.getStatus()) {
-                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
-                case 402: throw new ServiceException(Messages.CREDIT_CARD_NOT_REGISTERED);
-                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
-                case 408: throw new ServiceException(Messages.EXPIRED_RESERVATION);
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 402: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
+                case 408: throw new ServiceException(res.readEntity(String.class));
             }
         } catch (ServiceUnavailableException | ProcessingException e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
@@ -202,8 +202,8 @@ public class DefaultService implements ConcertService {
                     .post(Entity.xml(creditCard));
 
             switch (res.getStatus()) {
-                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
-                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
             }
         } catch (ServiceUnavailableException | ProcessingException e) {
             throw new ServiceException((Messages.SERVICE_COMMUNICATION_ERROR));
@@ -221,8 +221,8 @@ public class DefaultService implements ConcertService {
                     .get();
 
             switch (res.getStatus()) {
-                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
-                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
             }
 
             return res.readEntity(new GenericType<Set<BookingDTO>>() {});
