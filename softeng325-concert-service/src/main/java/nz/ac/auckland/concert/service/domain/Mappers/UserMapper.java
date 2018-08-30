@@ -20,7 +20,9 @@ public class UserMapper {
                 userDto.getPassword(),
                 userDto.getFirstname(),
                 userDto.getLastname(),
-                null // No credit card as of yet :)
+                null, // No credit card as of yet :)
+                null, // No reservations as of yet :)
+                null // No bookings as of yet :)
         );
     }
 

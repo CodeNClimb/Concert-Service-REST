@@ -1,6 +1,7 @@
 package nz.ac.auckland.concert.service.domain;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "USERS")
@@ -8,12 +9,14 @@ public class User {
 
     public User() {}
 
-    public User(String username, String password, String firstName, String lastName, CreditCard creditCard) {
+    public User(String username, String password, String firstName, String lastName, CreditCard creditCard, Reservation reservation, Set<Booking> bookings) {
         this.username = username;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.creditCard = creditCard;
+        this.reservation = reservation;
+        this.bookings = bookings;
     }
 
     @Column(name = "FIRST_NAME")
@@ -35,6 +38,13 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "CREDIT_CARD", unique = true)
     private CreditCard creditCard;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "RESERVATION", unique = true)
+    private Reservation reservation;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Booking> bookings;
 
 
     public String getFirstName() {
@@ -59,5 +69,17 @@ public class User {
 
     public void setCreditCard(CreditCard creditCard) {
         this.creditCard = creditCard;
+    }
+
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
+
+    public Set<Booking> getBookings() {
+        return bookings;
     }
 }

@@ -151,9 +151,7 @@ public class ConcertResource {
             EntityTransaction tx = em.getTransaction();
             tx.begin();
 
-            TypedQuery<User> userQuery = em.createQuery("SELECT u FROM Token t JOIN t.user u WHERE t.token = :token", User.class);
-            userQuery.setParameter("token", authToken);
-            User foundUser = userQuery.getSingleResult();
+            User foundUser = findUser(authToken, em);
 
             foundUser.setCreditCard(CreditCardMapper.toDomain(creditCard));
             em.merge(foundUser);
@@ -287,12 +285,14 @@ public class ConcertResource {
                     requestDto.getDate(), // Given date
                     LocalDateTime.now().plus(Duration.ofMinutes(RESERVATION_TIMEOUT_MINUTES)) // now plus given reservation timeout
             );
-            em.persist(newReservation);
+            User user = findUser(authToken, em);
+            user.setReservation(newReservation);
+            User mergedUser = em.merge(user);
             em.flush(); // generate id for newReservation
             tx.commit();
 
             ReservationDTO returnReservation = new ReservationDTO(
-                    newReservation.getId(),
+                    mergedUser.getReservation().getId(),
                     requestDto,
                     reservedSeats
             );
@@ -320,6 +320,26 @@ public class ConcertResource {
         if (!tokenIsValid(authToken, em))
             return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
 
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        TypedQuery<CreditCard> creditCardQuery = em.createQuery("SELECT c FROM Token t JOIN t.user u JOIN u.creditCard WHERE t.token = :token", CreditCard.class);
+        creditCardQuery.setParameter("token", authToken);
+        CreditCard creditCard = creditCardQuery.getSingleResult();
+
+        if (creditCard == null)
+            return Response.status(Response.Status.PAYMENT_REQUIRED).build();
+
+        TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
+        reservationQuery.setParameter("token", authToken);
+        Reservation foundReservation = reservationQuery.getSingleResult();
+
+        if (!LocalDateTime.now().isBefore(foundReservation.getExpiry()))
+            return Response.status(Response.Status.REQUEST_TIMEOUT).build();
+
+        Booking newBooking = new Booking(foundReservation, findUser(authToken, em));
+        em.persist(newBooking);
+
         return null;
     }
 
@@ -332,6 +352,13 @@ public class ConcertResource {
 
         // True if token isn't null and its expiry time is after the current time
         return token != null && !LocalDateTime.now().isAfter(token.getExpiry());
+    }
+
+    private User findUser(String authToken, EntityManager em) {
+
+        TypedQuery<User> userQuery = em.createQuery("SELECT u FROM Token t JOIN t.user u WHERE t.token = :token", User.class);
+        userQuery.setParameter("token", authToken);
+        return userQuery.getSingleResult();
     }
 
     private String generateUserToken() {
