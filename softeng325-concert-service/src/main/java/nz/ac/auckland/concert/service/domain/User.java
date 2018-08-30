@@ -8,11 +8,12 @@ public class User {
 
     public User() {}
 
-    public User(String username, String password, String firstName, String lastName) {
+    public User(String username, String password, String firstName, String lastName, CreditCard creditCard) {
         this.username = username;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.creditCard = creditCard;
     }
 
     @Column(name = "FIRST_NAME")
@@ -31,6 +32,10 @@ public class User {
     @Column(name = "PASSWORD")
     private String password;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "CREDIT_CARD", unique = true)
+    private CreditCard creditCard;
+
 
     public String getFirstName() {
         return firstName;
@@ -48,4 +53,7 @@ public class User {
         return password;
     }
 
+    public CreditCard getCreditCard() {
+        return creditCard;
+    }
 }

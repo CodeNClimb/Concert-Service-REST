@@ -150,6 +150,9 @@ public class ConcertResource {
         if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
             return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
 
+
+
+        return null;
     }
 
     @POST

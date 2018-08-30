@@ -19,7 +19,8 @@ public class UserMapper {
                 userDto.getUsername(),
                 userDto.getPassword(),
                 userDto.getFirstname(),
-                userDto.getLastname()
+                userDto.getLastname(),
+                null // No credit card as of yet :)
         );
     }
 
