@@ -4,7 +4,6 @@ import nz.ac.auckland.concert.service.domain.jpa.LocalDateTimeConverter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "AUTHORIZATION_TOKENS")
@@ -15,7 +14,7 @@ public class Token {
     public Token(User user, String token, LocalDateTime timestamp) {
         this.user = user;
         this.token = token;
-        this.timeStamp = timestamp;
+        this.expiry = timestamp;
     }
 
     @Id
@@ -30,9 +29,9 @@ public class Token {
     @Column(name = "TOKEN")
     private String token;
 
-    @Column(name = "CREATED_AT")
+    @Column(name = "EXPIRY")
     @Convert(converter = LocalDateTimeConverter.class)
-    private LocalDateTime timeStamp;
+    private LocalDateTime expiry;
 
 
     public User getUser() {
@@ -43,7 +42,7 @@ public class Token {
         return token;
     }
 
-    public LocalDateTime getTimeStamp() {
-        return timeStamp;
+    public LocalDateTime getExpiry() {
+        return expiry;
     }
 }

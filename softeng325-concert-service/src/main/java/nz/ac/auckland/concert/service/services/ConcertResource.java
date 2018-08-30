@@ -161,7 +161,7 @@ public class ConcertResource {
 
             // either token does not exist for this user or has timed out - if has timed out service should provide a new one
             String tokenString;
-            if (token == null || (token.getTimeStamp().isBefore(LocalDateTime.now()))) {
+            if (token == null || (token.getExpiry().isBefore(LocalDateTime.now()))) {
 
                 if (token != null) // Remove the current token if one exists
                     em.remove(token);
