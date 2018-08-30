@@ -144,14 +144,27 @@ public class DefaultService implements ConcertService {
     @Override
     public ReservationDTO reserveSeats(ReservationRequestDTO reservationRequest) throws ServiceException {
 
-        Response res = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve")
-                .request()
-                .header("Authorization", _authorizationToken) // Insert authorisation token
-                .accept(MediaType.APPLICATION_XML)
-                .post(Entity.xml(reservationRequest));
+        try {
+            Response res = _client
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve")
+                    .request()
+                    .header("Authorization", _authorizationToken) // Insert authorisation token
+                    .accept(MediaType.APPLICATION_XML)
+                    .post(Entity.xml(reservationRequest));
 
-        return res.readEntity(ReservationDTO.class);
+            switch(res.getStatus()) {
+                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
+                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+                case 404: throw new ServiceException(Messages.CONCERT_NOT_SCHEDULED_ON_RESERVATION_DATE);
+                case 409: throw new ServiceException(Messages.INSUFFICIENT_SEATS_AVAILABLE_FOR_RESERVATION);
+                case 422: throw new ServiceException(Messages.RESERVATION_REQUEST_WITH_MISSING_FIELDS);
+
+            }
+
+            return res.readEntity(ReservationDTO.class);
+        } catch (ServiceUnavailableException | ProcessingException e) {
+            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        }
     }
 
     @Override

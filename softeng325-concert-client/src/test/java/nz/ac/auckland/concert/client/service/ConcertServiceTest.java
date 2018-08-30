@@ -231,28 +231,6 @@ public class ConcertServiceTest {
 	}
 
 	@Test
-	public void testWithTimeout() throws InterruptedException {
-		int numberOfSeatsToBook  = 4;
-		UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
-		_service.createUser(userDTO);
-
-		LocalDateTime dateTime = LocalDateTime.of(2017, 2, 24, 17, 00);
-		ReservationRequestDTO request = new ReservationRequestDTO(numberOfSeatsToBook, PriceBand.PriceBandC, 1L, dateTime);
-
-		ReservationDTO res1 = _service.reserveSeats(request);
-
-
-
-		Thread.sleep(2500);
-
-
-
-		LocalDateTime dateTime2 = LocalDateTime.of(2017, 2, 24, 17, 00);
-		ReservationRequestDTO request2 = new ReservationRequestDTO(numberOfSeatsToBook, PriceBand.PriceBandC, 1L, dateTime2);
-		ReservationDTO res2 = _service.reserveSeats(request2);
-	}
-
-	@Test
 	public void testMakeReservationWithBadRequest() {
 		try {
 			UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
