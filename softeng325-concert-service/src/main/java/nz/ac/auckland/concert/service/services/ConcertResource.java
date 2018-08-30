@@ -116,7 +116,7 @@ public class ConcertResource {
             em.persist(newUser);
 
             String token = generateUserToken();
-            em.persist(new Token(newUser, token, LocalDateTime.now())); // Create and persist auth. token for user
+            em.persist(new Token(newUser, token, LocalDateTime.now().plus(Duration.ofMinutes(AUTHENTICATION_TIMEOUT_MINUTES)))); // Create and persist auth. token for user
 
             tx.commit();
             tx.begin();
@@ -199,13 +199,30 @@ public class ConcertResource {
     @Produces(MediaType.APPLICATION_XML)
     public Response reserveSeats(ReservationRequestDTO requestDto, @HeaderParam("Authorization") String authToken) {
 
+        if (authToken == null) // User has no access token
+            return Response.status(Response.Status.FORBIDDEN).build();
+
         if (requestDto.getConcertId() == null || requestDto.getDate() == null ||
-                requestDto.getNumberOfSeats() == 0 || requestDto.getSeatType() == null)
+                requestDto.getNumberOfSeats() == 0 || requestDto.getSeatType() == null) // Any necessary fields are missing
             return Response.status(422).entity(requestDto).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
 
         EntityManager em = _pm.createEntityManager();
 
         try {
+            // Retrieve corresponding token form the database
+            TypedQuery<Token> tokenQuery = em.createQuery("SELECT t FROM Token t WHERE t.token = :token", Token.class);
+            tokenQuery.setParameter("token", authToken);
+            Token token = tokenQuery.getSingleResult();
+            if (token == null || LocalDateTime.now().isAfter(token.getExpiry())){ // If token wasn't found or is expired return unauthorized
+                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();}
+
+            // Check that the concert in question has a corresponding date in the db.
+            TypedQuery<LocalDateTime> concertDateQuery = em.createQuery("SELECT d FROM Concert c JOIN c.dates d WHERE c.id = :id", LocalDateTime.class);
+            concertDateQuery.setParameter("id", requestDto.getConcertId());
+            List<LocalDateTime> dates = concertDateQuery.getResultList();
+            if (!dates.contains(requestDto.getDate())) // No concert was found on this date
+                return Response.status(Response.Status.NOT_FOUND).entity(requestDto).build();
+
             EntityTransaction tx = em.getTransaction();
             tx.begin();
 
@@ -233,6 +250,8 @@ public class ConcertResource {
 
             // Acquire reserved seats
             Set<SeatDTO> reservedSeats = TheatreUtility.findAvailableSeats(requestDto.getNumberOfSeats(), requestDto.getSeatType(), unavailableSeats);
+            if (reservedSeats.isEmpty()) // Not enough seats left to reserve
+                return Response.status(Response.Status.CONFLICT).build();
 
             // Create new reservation and persist to database
             Reservation newReservation = new Reservation(
