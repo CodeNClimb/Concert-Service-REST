@@ -137,6 +137,22 @@ public class ConcertResource {
     }
 
     @POST
+    @Path("/users/payment")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response createPayment(CreditCardDTO creditCard, @HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null) // User has no access token
+            return Response.status(Response.Status.FORBIDDEN).build();
+
+        EntityManager em = _pm.createEntityManager();
+
+        if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
+            return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+
+    }
+
+    @POST
     @Path("/users/login")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
