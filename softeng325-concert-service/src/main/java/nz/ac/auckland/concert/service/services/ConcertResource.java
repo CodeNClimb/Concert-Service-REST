@@ -209,12 +209,8 @@ public class ConcertResource {
         EntityManager em = _pm.createEntityManager();
 
         try {
-            // Retrieve corresponding token form the database
-            TypedQuery<Token> tokenQuery = em.createQuery("SELECT t FROM Token t WHERE t.token = :token", Token.class);
-            tokenQuery.setParameter("token", authToken);
-            Token token = tokenQuery.getSingleResult();
-            if (token == null || LocalDateTime.now().isAfter(token.getExpiry())){ // If token wasn't found or is expired return unauthorized
-                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();}
+            if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
+                return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
 
             // Check that the concert in question has a corresponding date in the db.
             TypedQuery<LocalDateTime> concertDateQuery = em.createQuery("SELECT d FROM Concert c JOIN c.dates d WHERE c.id = :id", LocalDateTime.class);
@@ -279,6 +275,33 @@ public class ConcertResource {
         }
     }
 
+    @POST
+    @Path("/reserve/book")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response bookSeats(ReservationDTO reservationDto, @HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null)
+            return Response.status(Response.Status.FORBIDDEN).build();
+
+        EntityManager em = _pm.createEntityManager();
+
+        if (!tokenIsValid(authToken, em))
+            return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
+
+        return null;
+    }
+
+    private boolean tokenIsValid(String authToken, EntityManager em) {
+
+        // Retrieve corresponding token form the database
+        TypedQuery<Token> tokenQuery = em.createQuery("SELECT t FROM Token t WHERE t.token = :token", Token.class);
+        tokenQuery.setParameter("token", authToken);
+        Token token = tokenQuery.getSingleResult();
+
+        // True if token isn't null and its expiry time is after the current time
+        return token != null && !LocalDateTime.now().isAfter(token.getExpiry());
+    }
 
     private String generateUserToken() {
         return UUID.randomUUID().toString();
