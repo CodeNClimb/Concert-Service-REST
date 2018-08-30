@@ -130,7 +130,7 @@ public class ConcertResource {
 
         if (userDto.getLastname() == null || userDto.getFirstname() == null || // If any necessary fields are not given
                 userDto.getUsername() == null || userDto.getPassword() == null)
-            return Response.status(422).entity(userDto).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
+            return Response.status(Response.Status.BAD_REQUEST).entity(userDto).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
@@ -167,7 +167,7 @@ public class ConcertResource {
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
     public Response createPayment(CreditCardDTO creditCard, @HeaderParam("Authorization") String authToken) {
-
+// TODO: bad request
         if (authToken == null) // User has no access token
             return Response.status(Response.Status.FORBIDDEN).build();
 
@@ -201,7 +201,7 @@ public class ConcertResource {
     public Response authenticateUser(UserDTO userDTO) {
 
         if (userDTO.getUsername() == null || userDTO.getPassword() == null) // If either username or password is empty
-            return Response.status(422).entity(userDTO).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
+            return Response.status(Response.Status.BAD_REQUEST).entity(userDTO).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
@@ -262,7 +262,7 @@ public class ConcertResource {
 
         if (requestDto.getConcertId() == null || requestDto.getDate() == null ||
                 requestDto.getNumberOfSeats() == 0 || requestDto.getSeatType() == null) // Any necessary fields are missing
-            return Response.status(422).entity(requestDto).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
+            return Response.status(Response.Status.BAD_REQUEST).entity(requestDto).build(); // Bad request
 
         EntityManager em = _pm.createEntityManager();
 
@@ -341,6 +341,8 @@ public class ConcertResource {
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
     public Response bookSeats(ReservationDTO reservationDto, @HeaderParam("Authorization") String authToken) {
+
+        // TODO: bad request
 
         if (authToken == null)
             return Response.status(Response.Status.FORBIDDEN).build();
