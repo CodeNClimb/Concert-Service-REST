@@ -18,7 +18,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -162,8 +161,7 @@ public class ConcertResource {
 
             // either token does not exist for this user or has timed out - if has timed out service should provide a new one
             String tokenString;
-            if (token == null ||
-                    (ChronoUnit.MINUTES.between(token.getTimeStamp(), LocalDateTime.now())) > AUTHENTICATION_TIMEOUT_MINUTES) { // TODO: Probably better to store the expiry time as opposed to the timestamp
+            if (token == null || (token.getTimeStamp().isBefore(LocalDateTime.now()))) {
 
                 if (token != null) // Remove the current token if one exists
                     em.remove(token);
@@ -174,7 +172,7 @@ public class ConcertResource {
                 EntityTransaction tx = em.getTransaction();
                 tx.begin();
 
-                Token tokenToPlace = new Token(foundUser, tokenString, LocalDateTime.now());
+                Token tokenToPlace = new Token(foundUser, tokenString, LocalDateTime.now().plus(Duration.ofMinutes(AUTHENTICATION_TIMEOUT_MINUTES)));
                 em.persist(tokenToPlace);
 
                 tx.commit();
@@ -204,7 +202,7 @@ public class ConcertResource {
         if (requestDto.getConcertId() == null || requestDto.getDate() == null ||
                 requestDto.getNumberOfSeats() == 0 || requestDto.getSeatType() == null)
             return Response.status(422).entity(requestDto).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
-        
+
         EntityManager em = _pm.createEntityManager();
 
         try {

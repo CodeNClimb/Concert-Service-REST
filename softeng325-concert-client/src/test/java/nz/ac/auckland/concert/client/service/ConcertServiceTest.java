@@ -161,6 +161,22 @@ public class ConcertServiceTest {
 			fail();
 		}
 	}
+
+	@Test
+	public void testAuthenticateUser1() {
+		try {
+			UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+			_service.createUser(userDTO);
+
+			UserDTO credentials = new UserDTO("Bulldog", "123");
+			UserDTO filledDTO = _service.authenticateUser(credentials);
+			UserDTO filledDTO1 = _service.authenticateUser(credentials);
+
+			assertEquals(userDTO, filledDTO);
+		} catch(ServiceException e) {
+			fail();
+		}
+	}
 	
 	@Test
 	public void testAuthenticateWithNonExistentUser() {
