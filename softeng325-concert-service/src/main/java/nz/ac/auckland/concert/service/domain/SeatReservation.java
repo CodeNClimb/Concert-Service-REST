@@ -24,8 +24,8 @@ public class SeatReservation {
     public SeatReservation() {}
 
     public SeatReservation(SeatRow row, SeatNumber number) {
-        row = row;
-        number = number;
+        this.row = row;
+        this.number = number;
     }
 
     public SeatRow getRow() {

@@ -7,9 +7,7 @@ import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.domain.Mappers.SeatMapper;
 import nz.ac.auckland.concert.service.domain.Mappers.UserMapper;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
-import org.hibernate.Session;
 
-import javax.annotation.PreDestroy;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.RollbackException;
@@ -21,8 +19,6 @@ import javax.ws.rs.core.Response;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -197,17 +193,18 @@ public class ConcertResource {
     }
 
     // TODO: use HTTP 401 for timed out resources in future
+    // TODO: test reserve with some fields already created.
 
     @POST
     @Path("/reserve")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response reserveSeats(ReservationRequestDTO requestDto) {
+    public Response reserveSeats(ReservationRequestDTO requestDto, @HeaderParam("Authorization") String authToken) {
 
         if (requestDto.getConcertId() == null || requestDto.getDate() == null ||
                 requestDto.getNumberOfSeats() == 0 || requestDto.getSeatType() == null)
             return Response.status(422).entity(requestDto).build(); // javax doesn't seem to contain 422 - Unprocessable Entity error code
-
+        
         EntityManager em = _pm.createEntityManager();
 
         try {
@@ -216,6 +213,7 @@ public class ConcertResource {
 
             Set<SeatDTO> unavailableSeats;
 
+            // TODO Test this but when booking is up and running
             // Get all existing bookings and current reservations for this concert on this date
             TypedQuery<SeatReservation> unavailableSeatsBookingQuery = em.createQuery("SELECT s FROM Booking b JOIN b.reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date", SeatReservation.class);
             unavailableSeatsBookingQuery.setParameter("concertId", requestDto.getConcertId());
@@ -225,8 +223,8 @@ public class ConcertResource {
             // Add all seats found in returned bookings to current unavailable seats
             unavailableSeats = seatsBooked.stream().map(SeatMapper::toDto).collect(Collectors.toSet());
 
-            // Find all seats currently reserved by another reservation process
-            TypedQuery<SeatReservation> unavailableSeatsReservationQuery = em.createQuery("SELECT s FROM Reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date AND r.expiry < :currentTime", SeatReservation.class);
+            // Find all seats currently reserved by another reservation process - check that timeout has not been reached using current time
+            TypedQuery<SeatReservation> unavailableSeatsReservationQuery = em.createQuery("SELECT s FROM Reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date AND r.expiry > :currentTime", SeatReservation.class);
             unavailableSeatsReservationQuery.setParameter("concertId", requestDto.getConcertId());
             unavailableSeatsReservationQuery.setParameter("date", requestDto.getDate());
             unavailableSeatsReservationQuery.setParameter("currentTime", LocalDateTime.now());
@@ -243,7 +241,7 @@ public class ConcertResource {
                     reservedSeats.stream().map(SeatMapper::toReservation).collect(Collectors.toSet()), // Reserved seats
                     em.find(Concert.class, requestDto.getConcertId()), // Corresponding concert from db
                     requestDto.getDate(), // Given date
-                    LocalDateTime.now().plus(Duration.ofMinutes(RESERVATION_TIMEOUT_MINUTES)) // now plus given amount of time
+                    LocalDateTime.now().plus(Duration.ofMinutes(RESERVATION_TIMEOUT_MINUTES)) // now plus given reservation timeout
             );
             em.persist(newReservation);
             em.flush(); // generate id for newReservation

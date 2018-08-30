@@ -35,6 +35,8 @@ public class DefaultService implements ConcertService {
     // Fields
     private Client _client;
     private String _authorizationToken;
+    private String _username;
+    private String _password;
 
 
     public DefaultService() {
@@ -78,7 +80,10 @@ public class DefaultService implements ConcertService {
                 case 422: throw new ServiceException(Messages.CREATE_USER_WITH_MISSING_FIELDS); // Incomplete fields
             }
 
-            _authorizationToken = res.getHeaderString("Authorization"); // Store token
+            // Store auth. details
+            _authorizationToken = res.getHeaderString("Authorization");
+            _username = newUser.getUsername();
+            _password = newUser.getPassword();
 
             return res.readEntity(UserDTO.class);
         } catch (ServiceUnavailableException | ProcessingException e) {
@@ -99,7 +104,10 @@ public class DefaultService implements ConcertService {
                 case 422: throw new ServiceException(Messages.AUTHENTICATE_USER_WITH_MISSING_FIELDS); // Missing username and/or password
             }
 
-            _authorizationToken = res.getHeaderString("Authorization"); // Update/Store token
+            // Store auth. details
+            _authorizationToken = res.getHeaderString("Authorization");
+            _username = user.getUsername();
+            _password = user.getPassword();
 
             return res.readEntity(UserDTO.class);
         } catch (ServiceUnavailableException | ProcessingException e) {
@@ -136,15 +144,14 @@ public class DefaultService implements ConcertService {
     @Override
     public ReservationDTO reserveSeats(ReservationRequestDTO reservationRequest) throws ServiceException {
 
-        Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve").request()
-                .accept(MediaType.APPLICATION_XML).post(Entity.xml(reservationRequest));
+        Response res = _client
+                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve")
+                .request()
+                .header("Authorization", _authorizationToken) // Insert authorisation token
+                .accept(MediaType.APPLICATION_XML)
+                .post(Entity.xml(reservationRequest));
 
-        ReservationDTO returned = res.readEntity(ReservationDTO.class);
-        System.out.println(returned.getId());
-        System.out.println(returned.getSeats());
-        System.out.println(returned.getReservationRequest().getConcertId());
-
-        return null;
+        return res.readEntity(ReservationDTO.class);
     }
 
     @Override
