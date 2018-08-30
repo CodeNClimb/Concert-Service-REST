@@ -10,10 +10,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.awt.print.Book;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -23,7 +21,7 @@ import java.util.stream.Collectors;
 public class ConcertResource {
 
     private static final long AUTHENTICATION_TIMEOUT_MINUTES = 5; // 5 minutes
-    private static final long RESERVATION_TIMEOUT_MINUTES = 5; // 5 minutes
+    private static final long RESERVATION_TIMEOUT_MILLIS = 1000; // 5 minutes
 
     private final PersistenceManager _pm;
 
@@ -107,7 +105,7 @@ public class ConcertResource {
             if (!tokenIsValid(authToken, em)) // If token wasn't found or is expired return unauthorized
                 return Response.status(Response.Status.UNAUTHORIZED).entity(authToken).build();
 
-            TypedQuery<Booking> bookingQuery = em.createQuery("SELECT b FROM Token t JOIN t.user u JOIN u.bookings b WHERE t.toke = :token", Booking.class);
+            TypedQuery<Booking> bookingQuery = em.createQuery("SELECT b FROM Token t JOIN t.user u JOIN u.bookings b WHERE t.token = :token", Booking.class);
             bookingQuery.setParameter("token", authToken);
             List<Booking> bookings = bookingQuery.getResultList();
 
@@ -314,7 +312,7 @@ public class ConcertResource {
                     reservedSeats.stream().map(SeatMapper::toReservation).collect(Collectors.toSet()), // Reserved seats
                     em.find(Concert.class, requestDto.getConcertId()), // Corresponding concert from db
                     requestDto.getDate(), // Given date
-                    LocalDateTime.now().plus(Duration.ofMinutes(RESERVATION_TIMEOUT_MINUTES)), // now plus given reservation timeout
+                    LocalDateTime.now().plus(Duration.ofMillis(RESERVATION_TIMEOUT_MILLIS)), // now plus given reservation timeout
                     requestDto.getSeatType()
             );
             User user = findUser(authToken, em);
@@ -358,10 +356,11 @@ public class ConcertResource {
 
             TypedQuery<CreditCard> creditCardQuery = em.createQuery("SELECT c FROM Token t JOIN t.user u JOIN u.creditCard c WHERE t.token = :token", CreditCard.class);
             creditCardQuery.setParameter("token", authToken);
-            CreditCard creditCard = creditCardQuery.getSingleResult();
-
-            if (creditCard == null)
+            try {
+                CreditCard creditCard = creditCardQuery.getSingleResult();
+            } catch (NoResultException e) {
                 return Response.status(Response.Status.PAYMENT_REQUIRED).build();
+            }
 
             TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
             reservationQuery.setParameter("token", authToken);

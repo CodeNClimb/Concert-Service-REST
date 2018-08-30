@@ -184,7 +184,6 @@ public class DefaultService implements ConcertService {
                 case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
                 case 408: throw new ServiceException(Messages.EXPIRED_RESERVATION);
             }
-
         } catch (ServiceUnavailableException | ProcessingException e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
         }
@@ -213,7 +212,21 @@ public class DefaultService implements ConcertService {
     @Override
     public Set<BookingDTO> getBookings() throws ServiceException {
 
+        try {
+            Response res = _client
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/book")
+                    .request()
+                    .header("Authorization", _authorizationToken) // Insert authorisation token
+                    .get();
 
-        return null;
+            switch (res.getStatus()) {
+                case 401: throw new ServiceException(Messages.BAD_AUTHENTICATON_TOKEN);
+                case 403: throw new ServiceException(Messages.UNAUTHENTICATED_REQUEST);
+            }
+
+            return res.readEntity(new GenericType<Set<BookingDTO>>() {});
+        } catch (ServiceUnavailableException | ProcessingException e) {
+            throw new ServiceException((Messages.SERVICE_COMMUNICATION_ERROR));
+        }
     }
 }
