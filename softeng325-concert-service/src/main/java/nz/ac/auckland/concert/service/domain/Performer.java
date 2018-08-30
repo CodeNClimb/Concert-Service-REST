@@ -3,7 +3,6 @@ package nz.ac.auckland.concert.service.domain;
 import nz.ac.auckland.concert.common.types.Genre;
 
 import javax.persistence.*;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 

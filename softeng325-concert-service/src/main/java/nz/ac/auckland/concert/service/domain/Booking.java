@@ -1,7 +1,6 @@
 package nz.ac.auckland.concert.service.domain;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Table(name = "BOOKINGS")
