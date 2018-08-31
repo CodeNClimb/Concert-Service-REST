@@ -37,6 +37,9 @@ public class ConcertResource {
     }
 
     // TODO: HATEOS or whatever
+    // TODO: concurrency
+    // TODO: subscription
+    // TODO: appendix b thing
 
     @GET
     @Path("/concerts")
