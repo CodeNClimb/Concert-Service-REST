@@ -3,6 +3,7 @@ package nz.ac.auckland.concert.service.domain;
 import nz.ac.auckland.concert.common.types.Genre;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -12,6 +13,12 @@ public class Performer  {
 
     public Performer() {}
 
+    public Performer(String name, String imageName, Genre genre, Set<Concert> concerts) {
+        this.name = name;
+        this.imageName = imageName;
+        this.genre = genre;
+        this.concerts = concerts;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,6 +65,6 @@ public class Performer  {
     }
 
     public Set<Long> getConcertIds() {
-        return concerts.stream().map(Concert::getId).collect(Collectors.toSet());
+        return concerts  == null ? new HashSet<>() : concerts.stream().map(Concert::getId).collect(Collectors.toSet());
     }
 }

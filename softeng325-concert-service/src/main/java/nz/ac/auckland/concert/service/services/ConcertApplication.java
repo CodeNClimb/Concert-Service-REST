@@ -13,6 +13,7 @@ public class ConcertApplication extends Application {
 
     public ConcertApplication() {
         _singletons.add(PersistenceManager.instance());
+        _singletons.add(SubscriptionManager.instance());
         _classes.add(ConcertResource.class);
     }
 

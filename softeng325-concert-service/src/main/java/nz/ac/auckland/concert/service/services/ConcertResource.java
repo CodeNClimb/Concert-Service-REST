@@ -29,10 +29,12 @@ public class ConcertResource {
     private static final long RESERVATION_TIMEOUT_MILLIS = 1000; // 5 minutes
 
     private final PersistenceManager _pm;
+    private final SubscriptionManager _sm;
 
     public ConcertResource() {
 
         _pm = PersistenceManager.instance();
+        _sm = SubscriptionManager.instance();
 
     }
 
@@ -418,6 +420,102 @@ public class ConcertResource {
             return Response
                     .status(Response.Status.NO_CONTENT)
                     .build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @POST
+    @Path("/performers")
+    public Response addPerformer(PerformerDTO performerDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
+        }
+
+        if (performerDTO.getName() == null) { // Any necessary fields are missing
+            _logger.info("Denied user agent: " + userAgent + "; With missing field(s) in performerDTO.");
+            return Response.status(Response.Status.BAD_REQUEST).entity(Messages.RESERVATION_REQUEST_WITH_MISSING_FIELDS).build(); // Bad request
+        }
+
+        EntityManager em = _pm.createEntityManager();
+
+        try {
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+
+            if (!tokenIsValid(authToken, em)) { // If token wasn't found or is expired return unauthorized
+                _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
+            }
+
+            Performer newPerformer = PerformerMapper.toDomainModel(performerDTO);
+            em.persist(newPerformer);
+
+            tx.commit();
+            _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name " + newPerformer.getName());
+            PerformerDTO returnPerformerDTO = PerformerMapper.toDto(newPerformer);
+
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(returnPerformerDTO)
+                    .build();
+        } finally {
+            em.close();
+        }
+    }
+
+    @POST
+    @Path("/concerts")
+    public Response addConcert(ConcertDTO concertDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
+        }
+
+        if (concertDTO.getTitle() == null || concertDTO.getDates() == null || concertDTO.getDates().isEmpty() ||
+                concertDTO.getPerformerIds() == null || concertDTO.getPerformerIds().isEmpty()) { // Any necessary fields are missing
+            _logger.info("Denied user agent: " + userAgent + "; With missing field(s) in concertDTO.");
+            return Response.status(Response.Status.BAD_REQUEST).entity(Messages.RESERVATION_REQUEST_WITH_MISSING_FIELDS).build(); // Bad request
+        }
+
+        EntityManager em = _pm.createEntityManager();
+
+        try {
+            if (!tokenIsValid(authToken, em)) { // If token wasn't found or is expired return unauthorized
+                _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
+            }
+
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    @POST
+    @Path("/images")
+    public Response addImage(PerformerDTO performerDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
+        }
+
+        if (performerDTO.getImageName() == null || performerDTO.getId() == null) { // Any necessary fields are missing
+            _logger.info("Denied user agent: " + userAgent + "; With missing field(s) in performerDTO.");
+            return Response.status(Response.Status.BAD_REQUEST).entity(Messages.RESERVATION_REQUEST_WITH_MISSING_FIELDS).build(); // Bad request
+        }
+
+        EntityManager em = _pm.createEntityManager();
+
+        try {
+            if (!tokenIsValid(authToken, em)) { // If token wasn't found or is expired return unauthorized
+                _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
+            }
+
+            return null;
         } finally {
             em.close();
         }

@@ -26,17 +26,17 @@ public class DefaultService implements ConcertService {
 
     // Constants:
     // AWS S3 access credentials for concert images.
-    private static final String AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
-    private static final String AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
+    protected static final String AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
+    protected static final String AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
 
     // Name of the S3 bucket that stores images.
-    private static final String AWS_BUCKET = Config.AWS_BUCKET;
+    protected static final String AWS_BUCKET = Config.AWS_BUCKET;
 
     // Fields
-    private Client _client;
-    private String _authorizationToken;
-    private String _username; // TODO: implement re-logging in
-    private String _password;
+    protected Client _client;
+    protected String _authorizationToken;
+    protected String _username; // TODO: implement re-logging in
+    protected String _password;
 
 
     public DefaultService() {
