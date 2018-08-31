@@ -32,4 +32,15 @@ public class ExtendedService extends DefaultService {
     }
 
 
+    public String subscribeToNewPerformers() {
+        Response resw = _client
+                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers/getNotifications")
+                .request()
+                .header("Authorization", _authorizationToken) // Insert authorisation token
+                .accept(MediaType.APPLICATION_XML)
+                .get();
+
+        return null;
+    }
+
 }

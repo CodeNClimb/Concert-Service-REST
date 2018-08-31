@@ -4,6 +4,7 @@ import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.*;
 import nz.ac.auckland.concert.service.domain.Mappers.*;
+import nz.ac.auckland.concert.service.domain.Types.SubscriptionType;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -459,7 +460,8 @@ public class ConcertResource {
             _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name " + newPerformer.getName());
             PerformerDTO returnPerformerDTO = PerformerMapper.toDto(newPerformer);
 
-            // TODO: add notification in worker thread
+            _sm.notifySubscribers(SubscriptionType.PERFORMER, newPerformer.getName());
+            _logger.info("Subscribers notified of new performer: " + newPerformer.getName());
 
             return Response
                     .status(Response.Status.OK)
@@ -541,11 +543,7 @@ public class ConcertResource {
             response.resume(Messages.UNAUTHENTICATED_REQUEST);
         }
 
-        EntityManager em = _pm.createEntityManager();
-
-        User user = findUser(authToken, em);
-
-        _sm.addSubscription(Performer.class, user);
+        _sm.addSubscription(SubscriptionType.PERFORMER, response);
     }
 
     private boolean tokenIsValid(String authToken, EntityManager em) {

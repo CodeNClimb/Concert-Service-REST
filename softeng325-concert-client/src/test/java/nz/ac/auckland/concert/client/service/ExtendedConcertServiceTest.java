@@ -82,4 +82,30 @@ public class ExtendedConcertServiceTest {
         }
     }
 
+    @Test
+    public void testPerformerSubscription() {
+        try {
+            UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+            _service.createUser(userDTO);
+
+
+            Thread thread = new Thread(() -> {
+                String response = _service.subscribeToNewPerformers();
+                System.out.println(response);
+            });
+            thread.start();
+
+            ExtendedService service = new ExtendedService();
+            UserDTO userDTO2 = new UserDTO("Bulldog1", "123", "Churchill", "Winston");
+            service.createUser(userDTO2);
+
+            PerformerDTO newPerformer = new PerformerDTO(null, "Tyga", null, null, null);
+            service.createPerformer(newPerformer);
+
+
+        } catch(ServiceException e) {
+            fail();
+        }
+    }
+
 }
