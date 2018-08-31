@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -457,6 +459,8 @@ public class ConcertResource {
             _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name " + newPerformer.getName());
             PerformerDTO returnPerformerDTO = PerformerMapper.toDto(newPerformer);
 
+            // TODO: add notification in worker thread
+
             return Response
                     .status(Response.Status.OK)
                     .entity(returnPerformerDTO)
@@ -465,6 +469,9 @@ public class ConcertResource {
             em.close();
         }
     }
+
+    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @POST
     @Path("/concerts")
@@ -519,6 +526,26 @@ public class ConcertResource {
         } finally {
             em.close();
         }
+    }
+
+    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @GET
+    @Path("/performers/getNotifications")
+    @Consumes(MediaType.APPLICATION_XML)
+    public void waitForNewPerformers(@Suspended AsyncResponse response, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            response.resume(Messages.UNAUTHENTICATED_REQUEST);
+        }
+
+        EntityManager em = _pm.createEntityManager();
+
+        User user = findUser(authToken, em);
+
+        _sm.addSubscription(Performer.class, user);
     }
 
     private boolean tokenIsValid(String authToken, EntityManager em) {
