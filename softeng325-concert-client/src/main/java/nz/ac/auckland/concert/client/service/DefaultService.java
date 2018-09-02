@@ -79,12 +79,28 @@ public class DefaultService implements ConcertService {
     @Override
     public Set<PerformerDTO> getPerformers() throws ServiceException {
 
-        try {
-            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers").request().get();
-            return res.readEntity(new GenericType<Set<PerformerDTO>>() {});
-        } catch (ServiceUnavailableException | ProcessingException e) {
-            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        // Use path parameters to get ranges of results
+        int start = 0;
+        int resultListLength = RETRIEVE_WINDOW_SIZE;
+
+        Set<PerformerDTO> performers = new HashSet<>();
+
+        while (resultListLength == RETRIEVE_WINDOW_SIZE) { // While still receiving full window size sets
+            try {
+                String path = String.format("/resources/performers?start=%d&size=%d", start, RETRIEVE_WINDOW_SIZE);
+                Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + path).request().get();
+
+                Set<PerformerDTO> resultList = res.readEntity(new GenericType<Set<PerformerDTO>>() {});
+                start += RETRIEVE_WINDOW_SIZE; // Crawl start along by window size
+                resultListLength = resultList.size(); // Set as current size of result list, used in while predicate
+
+                performers.addAll(resultList);
+            } catch (ServiceUnavailableException | ProcessingException e) {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
         }
+
+        return performers;
     }
 
     @Override

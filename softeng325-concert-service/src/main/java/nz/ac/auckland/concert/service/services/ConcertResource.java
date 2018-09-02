@@ -75,13 +75,16 @@ public class ConcertResource {
     @GET
     @Path("/performers")
     @Produces(MediaType.APPLICATION_XML)
-    public Response getPerformers(@HeaderParam("user-agent") String userAgent) {
+    public Response getPerformers(
+            @HeaderParam("user-agent") String userAgent,
+            @QueryParam("start") int start,
+            @QueryParam("size") int size) {
 
         EntityManager em = _pm.createEntityManager();
 
         try {
             TypedQuery<Performer> q = em.createQuery("SELECT p FROM Performer p", Performer.class);
-            List<Performer> performers = q.getResultList();
+            List<Performer> performers = q.setFirstResult(start).setMaxResults(size).getResultList();
 
             List<PerformerDTO> performerDTOs = performers.stream().map(PerformerMapper::toDto).collect(Collectors.toList());
             GenericEntity<List<PerformerDTO>> entity = new GenericEntity<List<PerformerDTO>>(performerDTOs) {};
