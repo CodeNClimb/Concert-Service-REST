@@ -566,7 +566,10 @@ public class ConcertResource {
 
     @PUT
     @Path("/images")
-    public Response addImage(PerformerDTO performerDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response addImage(
+            PerformerDTO performerDTO,
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken) {
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
             return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
@@ -602,8 +605,12 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
+                    .location(new URI(_uri.getBaseUri() + "resources/images/" + performer.getImageName()))
                     .entity(returnPerformerDto)
                     .build();
+        } catch (URISyntaxException e) {
+            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
