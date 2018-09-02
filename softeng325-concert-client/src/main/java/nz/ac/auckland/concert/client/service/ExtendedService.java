@@ -41,7 +41,7 @@ public class ExtendedService extends DefaultService {
 
     public ConcertDTO createConcert(ConcertDTO concertDTO) {
         try {
-            Response res = _client
+            Response res = _client // Ask service to create concert
                     .target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
@@ -53,6 +53,11 @@ public class ExtendedService extends DefaultService {
                 case 401: throw new ServiceException(res.readEntity(String.class));
                 case 403: throw new ServiceException(res.readEntity(String.class));
             }
+
+            res = _client // Get concert from location sent in response
+                    .target(res.getLocation())
+                    .request()
+                    .get();
 
             return res.readEntity(ConcertDTO.class);
 

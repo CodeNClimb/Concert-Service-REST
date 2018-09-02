@@ -45,7 +45,24 @@ public class ConcertResource {
     }
 
     // TODO: concurrency
-    // TODO: Comments
+
+    @GET
+    @Path("/concerts/{id}")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getConcert(
+            @HeaderParam("user-agent") String userAgent,
+            @PathParam("id") long id) {
+
+        EntityManager em = _pm.createEntityManager();
+
+        Concert concert = em.find(Concert.class, id);
+        ConcertDTO returnConcert = ConcertMapper.toDto(concert);
+
+        return Response
+                .status(Response.Status.OK)
+                .entity(returnConcert)
+                .build();
+    }
 
     /**
      * This method allows for multiple concerts to be retrieved in batches up to the clients discretion.
@@ -646,7 +663,6 @@ public class ConcertResource {
             tx.commit();
             _logger.info("Successfully created new concert with id: " + newConcert.getId() + ", name: " + newConcert.getTitle() +
                     " and performers: " + Arrays.toString(newConcert.getPerformers().stream().map(Performer::getName).toArray()));
-            ConcertDTO retrunConcertDTO = ConcertMapper.toDto(newConcert);
 
             _sm.notifySubscribers(SubscriptionType.CONCERT, newConcert);
             _logger.info("Subscribers notified of new concert: " + newConcert.getTitle());
@@ -654,7 +670,6 @@ public class ConcertResource {
             return Response
                     .status(Response.Status.OK)
                     .location(new URI(_uri.getBaseUri() + "resources/concerts/" + newConcert.getId()))
-                    .entity(retrunConcertDTO)
                     .build();
         } catch (URISyntaxException e) {
             _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
