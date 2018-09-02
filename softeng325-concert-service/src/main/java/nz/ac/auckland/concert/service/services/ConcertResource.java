@@ -64,6 +64,26 @@ public class ConcertResource {
                 .build();
     }
 
+    @GET
+    @Path("/performers/{id}")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getPerformer(
+            @HeaderParam("user-agent") String userAgent,
+            @PathParam("id") long id) {
+
+        EntityManager em = _pm.createEntityManager();
+
+        Performer performer = em.find(Performer.class, id);
+        PerformerDTO returnPerformer = PerformerMapper.toDto(performer);
+
+        return Response
+                .status(Response.Status.OK)
+                .entity(returnPerformer)
+                .build();
+
+    }
+
+
     /**
      * This method allows for multiple concerts to be retrieved in batches up to the clients discretion.
      * No authentication is required here.
@@ -560,7 +580,6 @@ public class ConcertResource {
         }
     }
 
-    // TODO: make hateos
     /**
      * Creates a new performer entity in the database of the service. Authentication is required and can be
      * provided through an authorization token.

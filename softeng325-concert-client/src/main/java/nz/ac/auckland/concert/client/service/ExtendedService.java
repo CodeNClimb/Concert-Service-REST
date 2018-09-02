@@ -31,6 +31,11 @@ public class ExtendedService extends DefaultService {
                 case 403: throw new ServiceException(res.readEntity(String.class));
             }
 
+            res = _client // get performer given by location in response
+                    .target(res.getLocation())
+                    .request()
+                    .get();
+
             return res.readEntity(PerformerDTO.class);
 
         } catch (ServiceUnavailableException | ProcessingException e) {
