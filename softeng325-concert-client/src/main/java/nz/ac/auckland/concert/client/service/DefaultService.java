@@ -248,18 +248,17 @@ public class DefaultService implements ConcertService {
     public Set<BookingDTO> getBookings() throws ServiceException {
 
         // Use path parameters to get ranges of results
-        int start = 0;
         int resultListLength = RETRIEVE_WINDOW_SIZE;
+        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/resources/users/book?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<BookingDTO> bookings = new HashSet<>();
 
         while (resultListLength == RETRIEVE_WINDOW_SIZE) { // While still receiving full window size sets
             try {
-                String path = String.format("/resources/users/book?start=%d&size=%d", start, RETRIEVE_WINDOW_SIZE);
                 Response res = _client
-                        .target(Config.LOCAL_SERVER_ADDRESS + path)
+                        .target(url)
                         .request()
-                        .header("Authorization", _authorizationToken) // Insert authorisation token
+                        .header("Authorization", _authorizationToken) // Insert authorization token
                         .get();
 
                 switch (res.getStatus()) {
@@ -268,8 +267,8 @@ public class DefaultService implements ConcertService {
                 }
 
                 Set<BookingDTO> resultList = res.readEntity(new GenericType<Set<BookingDTO>>() {});
-                start += RETRIEVE_WINDOW_SIZE; // Crawl start along by window size
                 resultListLength = resultList.size(); // Set as current size of result list, used in while predicate
+                url = res.getLocation().toString();
 
                 bookings.addAll(resultList);
             } catch (ServiceUnavailableException | ProcessingException e) {
