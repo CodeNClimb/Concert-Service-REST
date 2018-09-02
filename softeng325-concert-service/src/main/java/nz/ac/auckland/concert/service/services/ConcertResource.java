@@ -48,13 +48,16 @@ public class ConcertResource {
     @GET
     @Path("/concerts")
     @Produces(MediaType.APPLICATION_XML)
-    public Response getConcerts(@HeaderParam("user-agent") String userAgent) {
+    public Response getConcerts(
+            @HeaderParam("user-agent") String userAgent,
+            @QueryParam("start") int start,
+            @QueryParam("size") int size) {
 
         EntityManager em = _pm.createEntityManager();
 
         try {
             TypedQuery<Concert> q = em.createQuery("SELECT c FROM Concert c", Concert.class);
-            List<Concert> concerts = q.getResultList();
+            List<Concert> concerts = q.setFirstResult(start).setMaxResults(size).getResultList();
 
             List<ConcertDTO> concertDTOs = concerts.stream().map(ConcertMapper::toDto).collect(Collectors.toList());
             GenericEntity<List<ConcertDTO>> entity = new GenericEntity<List<ConcertDTO>>(concertDTOs) {};

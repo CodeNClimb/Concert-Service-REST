@@ -20,6 +20,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.awt.*;
+import java.util.HashSet;
 import java.util.Set;
 
 public class DefaultService implements ConcertService {
@@ -29,13 +30,15 @@ public class DefaultService implements ConcertService {
     protected static final String AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
     protected static final String AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
 
+    protected static final int RETRIEVE_WINDOW_SIZE = 10;
+
     // Name of the S3 bucket that stores images.
     protected static final String AWS_BUCKET = Config.AWS_BUCKET;
 
     // Fields
     protected Client _client;
     protected String _authorizationToken;
-    protected String _username; // TODO: implement re-logging in
+    protected String _username;
     protected String _password;
 
 
@@ -49,12 +52,28 @@ public class DefaultService implements ConcertService {
     @Override
     public Set<ConcertDTO> getConcerts() throws ServiceException {
 
-        try {
-            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts").request().get();
-            return res.readEntity(new GenericType<Set<ConcertDTO>>() {});
-        } catch (ServiceUnavailableException | ProcessingException e) {
-            throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        // Use path parameters to get ranges of results
+        int start = 0;
+        int resultListLength = RETRIEVE_WINDOW_SIZE;
+
+        Set<ConcertDTO> concerts = new HashSet<>();
+
+        while (resultListLength == RETRIEVE_WINDOW_SIZE) { // While still receiving full window size sets
+            try {
+                String path = String.format("/resources/concerts?start=%d&size=%d", start, RETRIEVE_WINDOW_SIZE);
+                Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + path).request().get();
+
+                Set<ConcertDTO> resultList = res.readEntity(new GenericType<Set<ConcertDTO>>() {});
+                start += RETRIEVE_WINDOW_SIZE; // Crawl start along by window size
+                resultListLength = resultList.size(); // Set as current size of result list, used in while predicate
+
+                concerts.addAll(resultList);
+            } catch (ServiceUnavailableException | ProcessingException e) {
+                throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+            }
         }
+
+        return concerts;
     }
 
     @Override
