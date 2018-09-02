@@ -20,6 +20,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.awt.*;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,19 +54,18 @@ public class DefaultService implements ConcertService {
     public Set<ConcertDTO> getConcerts() throws ServiceException {
 
         // Use path parameters to get ranges of results
-        int start = 0;
         int resultListLength = RETRIEVE_WINDOW_SIZE;
+        String url = String.format(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<ConcertDTO> concerts = new HashSet<>();
 
         while (resultListLength == RETRIEVE_WINDOW_SIZE) { // While still receiving full window size sets
             try {
-                String path = String.format("/resources/concerts?start=%d&size=%d", start, RETRIEVE_WINDOW_SIZE);
-                Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + path).request().get();
+                Response res = _client.target(url).request().get();
 
                 Set<ConcertDTO> resultList = res.readEntity(new GenericType<Set<ConcertDTO>>() {});
-                start += RETRIEVE_WINDOW_SIZE; // Crawl start along by window size
                 resultListLength = resultList.size(); // Set as current size of result list, used in while predicate
+                url = res.getLocation().toString();
 
                 concerts.addAll(resultList);
             } catch (ServiceUnavailableException | ProcessingException e) {

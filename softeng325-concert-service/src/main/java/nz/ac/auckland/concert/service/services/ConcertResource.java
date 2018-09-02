@@ -46,6 +46,7 @@ public class ConcertResource {
 
     // TODO: HATEOS or whatever
     // TODO: concurrency
+    // TODO: Comments
 
     @GET
     @Path("/concerts")
@@ -67,8 +68,12 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
+                    .location(new URI(_uri.getBaseUri() + String.format("resources/concerts?start=%d&size=%d", start + size, size)))
                     .entity(entity)
                     .build();
+        } catch (URISyntaxException e) {
+            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
