@@ -2,7 +2,6 @@ package nz.ac.auckland.concert.service.services;
 
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Performer;
-import nz.ac.auckland.concert.service.domain.Subscription;
 import nz.ac.auckland.concert.service.domain.Types.SubscriptionType;
 
 import javax.ws.rs.container.AsyncResponse;

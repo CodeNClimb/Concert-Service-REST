@@ -12,7 +12,7 @@ public class BookingMapper {
         Reservation reservation = booking.getReservation();
 
         return new BookingDTO(
-                reservation.getId(),
+                reservation.getConcert().getId(),
                 reservation.getConcert().getTitle(),
                 reservation.getDate(),
                 reservation.getSeats().stream().map(SeatMapper::toDto).collect(Collectors.toSet()),

@@ -313,7 +313,7 @@ public class ConcertServiceTest {
 			LocalDateTime dateTime = LocalDateTime.of(2017, 2, 24, 17, 00);
 			ReservationRequestDTO request = new ReservationRequestDTO(numberOfSeatsToBook, PriceBand.PriceBandC, 1L, dateTime);
 			ReservationDTO reservation = _service.reserveSeats(request);
-			
+
 			// Confirm the reservation.
 			_service.confirmReservation(reservation);
 			
