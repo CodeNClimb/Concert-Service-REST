@@ -9,6 +9,7 @@ public class PerformerMapper {
 
     public static Performer toDomainModel(PerformerDTO performerDto) {
         return new Performer(
+                performerDto.getId(),
                 performerDto.getName(),
                 performerDto.getImageName(),
                 null, // Creating a new performer has no need for creating their concerts or genre at same time.

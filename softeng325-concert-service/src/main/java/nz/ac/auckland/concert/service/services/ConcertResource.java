@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -43,7 +44,6 @@ public class ConcertResource {
 
     // TODO: HATEOS or whatever
     // TODO: concurrency
-    // TODO: subscription
     // TODO: appendix b thing
     // TODO: Move aws here
 
@@ -498,13 +498,12 @@ public class ConcertResource {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
             }
 
-
             Concert newConcert = ConcertMapper.toDomainModel(concertDTO);
             newConcert = em.merge(newConcert);
 
             tx.commit();
             _logger.info("Successfully created new concert with id: " + newConcert.getId() + ", name: " + newConcert.getTitle() +
-                    " and performers: " + newConcert.getPerformers().stream().map(performer -> performer.getName()));
+                    " and performers: " + Arrays.toString(newConcert.getPerformers().stream().map(Performer::getName).toArray()));
             ConcertDTO retrunConcertDTO = ConcertMapper.toDto(newConcert);
 
             _sm.notifySubscribers(SubscriptionType.CONCERT, newConcert);
@@ -519,7 +518,7 @@ public class ConcertResource {
         }
     }
 
-    @POST
+    @PUT
     @Path("/images")
     public Response addImage(PerformerDTO performerDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
         if (authToken == null) { // User has no access token
@@ -535,19 +534,34 @@ public class ConcertResource {
         EntityManager em = _pm.createEntityManager();
 
         try {
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+
             if (!tokenIsValid(authToken, em)) { // If token wasn't found or is expired return unauthorized
                 _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
                 return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
             }
 
-            return null;
+            Performer performer = em.find(Performer.class, performerDTO.getId());
+            performer.setImageName(performerDTO.getImageName());
+
+            tx.commit();
+
+            _logger.info("Successfully added image " + performer.getImageName() + " to performer " + performer.getName() + " with id (" + performer.getId() + ")");
+            PerformerDTO returnPerformerDto = PerformerMapper.toDto(performer);
+
+            _sm.notifySubscribers(SubscriptionType.PERFORMER_IMAGE, performer);
+            _sm.notifySubscribersWithId(SubscriptionType.PERFORMER_IMAGE, performer, performer.getId());
+            _logger.info("Subscribers notified of new image " + performer.getImageName() + " for performer " + performer.getName());
+
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(returnPerformerDto)
+                    .build();
         } finally {
             em.close();
         }
     }
-
-    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @GET
     @Path("/performers/getNotifications")
@@ -560,6 +574,7 @@ public class ConcertResource {
         }
 
         _sm.addSubscription(SubscriptionType.PERFORMER, response);
+        _logger.info("Subscriber added for new performers");
     }
 
     @GET
@@ -573,6 +588,21 @@ public class ConcertResource {
         }
 
         _sm.addSubscription(SubscriptionType.PERFORMER_IMAGE, response);
+        _logger.info("Subscriber added for new images");
+    }
+
+    @GET
+    @Path("/images/getNotifications/{id}")
+    @Consumes(MediaType.APPLICATION_XML)
+    public void waitForNewImagesForPerformer(@Suspended AsyncResponse response, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken, @PathParam("id") String performerId) {
+
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            response.resume(Messages.UNAUTHENTICATED_REQUEST);
+        }
+
+        _sm.addSubscriptionWithId(SubscriptionType.PERFORMER_IMAGE, response, Long.decode(performerId));
+        _logger.info("Subscriber added for new images for performer with id (" + performerId + ")");
     }
 
     @GET
@@ -586,8 +616,12 @@ public class ConcertResource {
         }
 
         _sm.addSubscription(SubscriptionType.CONCERT, response);
-
+        _logger.info("Subscriber added for new concerts");
     }
+
+
+    // Private methods
+
 
     private boolean tokenIsValid(String authToken, EntityManager em) {
 

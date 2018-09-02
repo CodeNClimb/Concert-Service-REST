@@ -120,7 +120,6 @@ public class ExtendedConcertServiceTest {
 
             Thread thread = new Thread(() -> {
                 String response = _service.subscribeToNewConcerts();
-                System.out.println(response);
                 Assert.assertTrue(response.contains("Heres a test!"));
                 Assert.assertTrue(response.contains("Panic! at the Disco"));
                 Assert.assertTrue(response.contains("Ed Sheeran"));
@@ -156,4 +155,56 @@ public class ExtendedConcertServiceTest {
         }
     }
 
+    @Test
+    public void testSubscribeToNewImages() {
+        try {
+            UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+            _service.createUser(userDTO);
+
+            Thread thread = new Thread(() -> {
+                String response = _service.subscribeToNewImages();
+                Assert.assertTrue(response.contains("test.jpg"));
+                Assert.assertTrue(response.contains("Panic! at the Disco"));
+            });
+            thread.start();
+
+            ExtendedService service = new ExtendedService();
+            UserDTO userDTO2 = new UserDTO("Bulldog1", "123", "Churchill", "Winston");
+            service.createUser(userDTO2);
+
+            PerformerDTO newPerformer = new PerformerDTO(1L, null, "test.jpg", null, new HashSet<>());
+            service.addImage(newPerformer);
+
+
+        } catch(ServiceException e) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testSubscribeToNewImagesWithPerformer() {
+        try {
+            UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
+            _service.createUser(userDTO);
+
+            Thread thread = new Thread(() -> {
+                PerformerDTO performerDTO = new PerformerDTO(1L, null, null, null, new HashSet<>());
+                String response = _service.subscribetoNewImagesForPerformer(performerDTO);
+                Assert.assertTrue(response.contains("test.jpg"));
+                Assert.assertTrue(response.contains("Panic! at the Disco"));
+            });
+            thread.start();
+
+            ExtendedService service = new ExtendedService();
+            UserDTO userDTO2 = new UserDTO("Bulldog1", "123", "Churchill", "Winston");
+            service.createUser(userDTO2);
+
+            PerformerDTO newPerformer = new PerformerDTO(1L, null, "test.jpg", null, new HashSet<>());
+            service.addImage(newPerformer);
+
+
+        } catch(ServiceException e) {
+            fail();
+        }
+    }
 }

@@ -17,7 +17,8 @@ public class Performer  {
         this.id = id;
     }
 
-    public Performer(String name, String imageName, Genre genre, Set<Concert> concerts) {
+    public Performer(Long id, String name, String imageName, Genre genre, Set<Concert> concerts) {
+        if (id != null) { this.id = id; }
         this.name = name;
         this.imageName = imageName;
         this.genre = genre;
@@ -55,9 +56,12 @@ public class Performer  {
         return name;
     }
 
-
     public String getImageName() {
         return imageName;
+    }
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
     }
 
     public Genre getGenre() {
