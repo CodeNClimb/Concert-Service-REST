@@ -103,7 +103,11 @@ public class ConcertResource {
     @Path("/users/book")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response getBookings(@HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response getBookings(
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken,
+            @QueryParam("start") int start,
+            @QueryParam("size") int size) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -120,7 +124,7 @@ public class ConcertResource {
 
             TypedQuery<Booking> bookingQuery = em.createQuery("SELECT b FROM Token t JOIN t.user u JOIN u.bookings b WHERE t.token = :token", Booking.class);
             bookingQuery.setParameter("token", authToken);
-            List<Booking> bookings = bookingQuery.getResultList();
+            List<Booking> bookings = bookingQuery.setFirstResult(start).setMaxResults(size).getResultList();
 
             Set<BookingDTO> bookingDTOS = bookings.stream().map(BookingMapper::toDto).collect(Collectors.toSet());
             GenericEntity<Set<BookingDTO>> entity = new GenericEntity<Set<BookingDTO>>(bookingDTOS) {};

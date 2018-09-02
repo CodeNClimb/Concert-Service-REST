@@ -248,21 +248,36 @@ public class DefaultService implements ConcertService {
     @Override
     public Set<BookingDTO> getBookings() throws ServiceException {
 
-        try {
-            Response res = _client
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/book")
-                    .request()
-                    .header("Authorization", _authorizationToken) // Insert authorisation token
-                    .get();
+        // Use path parameters to get ranges of results
+        int start = 0;
+        int resultListLength = RETRIEVE_WINDOW_SIZE;
 
-            switch (res.getStatus()) {
-                case 401: throw new ServiceException(res.readEntity(String.class));
-                case 403: throw new ServiceException(res.readEntity(String.class));
+        Set<BookingDTO> bookings = new HashSet<>();
+
+        while (resultListLength == RETRIEVE_WINDOW_SIZE) { // While still receiving full window size sets
+            try {
+                String path = String.format("/resources/users/book?start=%d&size=%d", start, RETRIEVE_WINDOW_SIZE);
+                Response res = _client
+                        .target(Config.LOCAL_SERVER_ADDRESS + path)
+                        .request()
+                        .header("Authorization", _authorizationToken) // Insert authorisation token
+                        .get();
+
+                switch (res.getStatus()) {
+                    case 401: throw new ServiceException(res.readEntity(String.class));
+                    case 403: throw new ServiceException(res.readEntity(String.class));
+                }
+
+                Set<BookingDTO> resultList = res.readEntity(new GenericType<Set<BookingDTO>>() {});
+                start += RETRIEVE_WINDOW_SIZE; // Crawl start along by window size
+                resultListLength = resultList.size(); // Set as current size of result list, used in while predicate
+
+                bookings.addAll(resultList);
+            } catch (ServiceUnavailableException | ProcessingException e) {
+                throw new ServiceException((Messages.SERVICE_COMMUNICATION_ERROR));
             }
-
-            return res.readEntity(new GenericType<Set<BookingDTO>>() {});
-        } catch (ServiceUnavailableException | ProcessingException e) {
-            throw new ServiceException((Messages.SERVICE_COMMUNICATION_ERROR));
         }
+
+        return bookings;
     }
 }
