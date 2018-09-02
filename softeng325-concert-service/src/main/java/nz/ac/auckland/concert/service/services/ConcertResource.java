@@ -513,7 +513,11 @@ public class ConcertResource {
 
     @POST
     @Path("/concerts")
-    public Response addConcert(ConcertDTO concertDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response addConcert(
+            ConcertDTO concertDTO,
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken) {
+
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
             return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
@@ -549,8 +553,12 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
+                    .location(new URI(_uri.getBaseUri() + "resources/concerts/" + newConcert.getId()))
                     .entity(retrunConcertDTO)
                     .build();
+        } catch (URISyntaxException e) {
+            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
