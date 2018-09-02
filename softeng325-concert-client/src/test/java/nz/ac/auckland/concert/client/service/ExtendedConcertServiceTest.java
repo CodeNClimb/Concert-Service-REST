@@ -1,10 +1,8 @@
 package nz.ac.auckland.concert.client.service;
 
-import com.amazonaws.services.dynamodbv2.xspec.L;
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.common.dto.UserDTO;
-import nz.ac.auckland.concert.common.types.Genre;
 import nz.ac.auckland.concert.common.types.PriceBand;
 import nz.ac.auckland.concert.service.services.ConcertApplication;
 import org.eclipse.jetty.server.Server;
@@ -17,10 +15,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.fail;
 
