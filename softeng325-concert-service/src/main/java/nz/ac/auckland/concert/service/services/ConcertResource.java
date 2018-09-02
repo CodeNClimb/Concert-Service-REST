@@ -58,7 +58,7 @@ public class ConcertResource {
             TypedQuery<Concert> q = em.createQuery("SELECT c FROM Concert c", Concert.class);
             List<Concert> concerts = q.getResultList();
 
-            List<ConcertDTO> concertDTOs = concerts.stream().map(ConcertMapper::doDto).collect(Collectors.toList());
+            List<ConcertDTO> concertDTOs = concerts.stream().map(ConcertMapper::toDto).collect(Collectors.toList());
             GenericEntity<List<ConcertDTO>> entity = new GenericEntity<List<ConcertDTO>>(concertDTOs) {};
             _logger.info("Retrieved (" + concerts.size() + ") concerts; send to user agent: " + userAgent);
 
@@ -458,10 +458,10 @@ public class ConcertResource {
             em.persist(newPerformer);
 
             tx.commit();
-            _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name " + newPerformer.getName());
+            _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name: " + newPerformer.getName());
             PerformerDTO returnPerformerDTO = PerformerMapper.toDto(newPerformer);
 
-            _sm.notifySubscribers(SubscriptionType.PERFORMER, newPerformer.getName());
+            _sm.notifySubscribers(SubscriptionType.PERFORMER, newPerformer);
             _logger.info("Subscribers notified of new performer: " + newPerformer.getName());
 
             return Response
@@ -472,9 +472,6 @@ public class ConcertResource {
             em.close();
         }
     }
-
-    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //TODO///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @POST
     @Path("/concerts")
@@ -493,12 +490,30 @@ public class ConcertResource {
         EntityManager em = _pm.createEntityManager();
 
         try {
+            EntityTransaction tx = em.getTransaction();
+            tx.begin();
+
             if (!tokenIsValid(authToken, em)) { // If token wasn't found or is expired return unauthorized
                 _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
                 return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
             }
 
-            return null;
+
+            Concert newConcert = ConcertMapper.toDomainModel(concertDTO);
+            newConcert = em.merge(newConcert);
+
+            tx.commit();
+            _logger.info("Successfully created new concert with id: " + newConcert.getId() + ", name: " + newConcert.getTitle() +
+                    " and performers: " + newConcert.getPerformers().stream().map(performer -> performer.getName()));
+            ConcertDTO retrunConcertDTO = ConcertMapper.toDto(newConcert);
+
+            _sm.notifySubscribers(SubscriptionType.CONCERT, newConcert);
+            _logger.info("Subscribers notified of new concert: " + newConcert.getTitle());
+
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(retrunConcertDTO)
+                    .build();
         } finally {
             em.close();
         }
@@ -564,6 +579,13 @@ public class ConcertResource {
     @Path("/concerts/getNotifications")
     @Consumes(MediaType.APPLICATION_XML)
     public void waitForNewConcerts(@Suspended AsyncResponse response, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            response.resume(Messages.UNAUTHENTICATED_REQUEST);
+        }
+
+        _sm.addSubscription(SubscriptionType.CONCERT, response);
 
     }
 

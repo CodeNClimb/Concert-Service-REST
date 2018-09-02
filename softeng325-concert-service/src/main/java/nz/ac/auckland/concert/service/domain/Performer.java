@@ -13,6 +13,10 @@ public class Performer  {
 
     public Performer() {}
 
+    public Performer(Long id) {
+        this.id = id;
+    }
+
     public Performer(String name, String imageName, Genre genre, Set<Concert> concerts) {
         this.name = name;
         this.imageName = imageName;

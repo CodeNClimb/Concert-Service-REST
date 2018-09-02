@@ -16,9 +16,12 @@ public class Concert {
 
     public Concert() {} // Default constructor required for JPA
 
-    public Concert(long id, String title) {
+    public Concert(long id, String title, Set<LocalDateTime> dates, Map<PriceBand, BigDecimal> prices, Set<Performer> performers) {
         this.id = id;
         this.title = title;
+        this.dates = dates;
+        this.prices = prices;
+        this.performers = performers;
     }
 
 
