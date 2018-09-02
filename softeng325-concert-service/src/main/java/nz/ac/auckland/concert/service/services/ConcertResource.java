@@ -80,7 +80,24 @@ public class ConcertResource {
                 .status(Response.Status.OK)
                 .entity(returnPerformer)
                 .build();
+    }
 
+    @GET
+    @Path("users/{username}")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getUser(
+            @HeaderParam("user-agent") String userAgent,
+            @PathParam("username") String username) {
+
+        EntityManager em = _pm.createEntityManager();
+
+        User user = em.find(User.class, username);
+        UserDTO returnUser = UserMapper.toDTO(user);
+
+        return Response
+                .status(Response.Status.OK)
+                .entity(returnUser)
+                .build();
     }
 
 

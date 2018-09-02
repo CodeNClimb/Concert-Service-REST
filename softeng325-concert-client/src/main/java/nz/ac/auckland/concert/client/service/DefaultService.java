@@ -119,6 +119,11 @@ public class DefaultService implements ConcertService {
             _username = newUser.getUsername();
             _password = newUser.getPassword();
 
+            res = _client
+                    .target(res.getLocation())
+                    .request()
+                    .get();
+
             return res.readEntity(UserDTO.class);
         } catch (ServiceUnavailableException | ProcessingException e) {
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
@@ -149,8 +154,6 @@ public class DefaultService implements ConcertService {
         }
     }
 
-    // TODO : Fix error throwing with silly amazon s3 stuff
-    // TODO : Move to service
     @Override
     public Image getImageForPerformer(PerformerDTO performer) throws ServiceException {
 
