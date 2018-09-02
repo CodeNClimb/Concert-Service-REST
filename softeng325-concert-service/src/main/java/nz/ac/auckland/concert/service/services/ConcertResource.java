@@ -178,7 +178,7 @@ public class ConcertResource {
             return Response
                     .status(Response.Status.OK)
                     .header("Authorization", token) // place auth token in header under Authorization:
-                    .location(new URI(_uri.getBaseUri() + "resources/users/" + returnDTO.getUsername()))
+                    .location(new URI(_uri.getBaseUri() + "resources/users/" + returnDTO.getUsername())) // Return location of new user
                     .entity(returnDTO)
                     .build();
         } catch (RollbackException e) {
@@ -196,7 +196,10 @@ public class ConcertResource {
     @Path("/users/payment")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response createPayment(CreditCardDTO creditCard, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response createPayment(
+            CreditCardDTO creditCard,
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -223,7 +226,11 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.NO_CONTENT)
+                    .location(new URI(_uri.getBaseUri() + "resources/users/" + foundUser.getUsername() + "/payment"))
                     .build();
+        } catch (URISyntaxException e) {
+            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
