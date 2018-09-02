@@ -240,7 +240,9 @@ public class ConcertResource {
     @Path("/users/login")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response authenticateUser(UserDTO userDTO, @HeaderParam("user-agent") String userAgent) {
+    public Response authenticateUser(
+            UserDTO userDTO,
+            @HeaderParam("user-agent") String userAgent) {
 
         if (userDTO.getUsername() == null || userDTO.getPassword() == null) { // If either username or password is empty
             _logger.info("Denied user agent: " + userAgent + "; With missing field(s) in userDTO.");
@@ -301,7 +303,10 @@ public class ConcertResource {
     @Path("/reserve")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response reserveSeats(ReservationRequestDTO requestDto, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response reserveSeats(
+            ReservationRequestDTO requestDto,
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -399,7 +404,10 @@ public class ConcertResource {
     @Path("/reserve/book")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response bookSeats(ReservationDTO reservationDto, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response bookSeats(
+            ReservationDTO reservationDto,
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) {
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -454,7 +462,10 @@ public class ConcertResource {
 
     @POST
     @Path("/performers")
-    public Response addPerformer(PerformerDTO performerDTO, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+    public Response addPerformer(
+            PerformerDTO performerDTO,
+            @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -489,8 +500,12 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
+                    .location(new URI(_uri.getBaseUri() + "resources/performers/" + newPerformer.getId()))
                     .entity(returnPerformerDTO)
                     .build();
+        } catch (URISyntaxException e) {
+            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
