@@ -12,8 +12,7 @@ import javax.ws.rs.core.Response;
 
 public class ExtendedService extends DefaultService {
 
-    // TODO: error handling for these boys
-    public ExtendedService() {
+        public ExtendedService() {
         _client = Config.POOLED_CLIENT;
     }
 
@@ -25,6 +24,12 @@ public class ExtendedService extends DefaultService {
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
                     .post(Entity.xml(performerDTO));
+
+            switch (res.getStatus()) {
+                case 400: throw new ServiceException(res.readEntity(String.class));
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
+            }
 
             return res.readEntity(PerformerDTO.class);
 
@@ -43,6 +48,12 @@ public class ExtendedService extends DefaultService {
                     .accept(MediaType.APPLICATION_XML)
                     .post(Entity.xml(concertDTO));
 
+            switch (res.getStatus()) {
+                case 400: throw new ServiceException(res.readEntity(String.class));
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
+            }
+
             return res.readEntity(ConcertDTO.class);
 
         } catch (ServiceUnavailableException | ProcessingException e) {
@@ -60,8 +71,13 @@ public class ExtendedService extends DefaultService {
                     .accept(MediaType.APPLICATION_XML)
                     .put(Entity.xml(performerDTO));
 
-            return res.readEntity(PerformerDTO.class);
+            switch (res.getStatus()) {
+                case 400: throw new ServiceException(res.readEntity(String.class));
+                case 401: throw new ServiceException(res.readEntity(String.class));
+                case 403: throw new ServiceException(res.readEntity(String.class));
+            }
 
+            return res.readEntity(PerformerDTO.class);
         } catch (ServiceUnavailableException | ProcessingException e) {
             e.printStackTrace();
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);

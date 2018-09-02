@@ -44,8 +44,6 @@ public class ConcertResource {
 
     // TODO: HATEOS or whatever
     // TODO: concurrency
-    // TODO: appendix b thing
-    // TODO: Move aws here
 
     @GET
     @Path("/concerts")
