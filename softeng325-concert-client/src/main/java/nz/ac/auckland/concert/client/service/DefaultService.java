@@ -55,7 +55,7 @@ public class DefaultService implements ConcertService {
 
         // Use path parameters to get ranges of results
         int resultListLength = RETRIEVE_WINDOW_SIZE;
-        String url = String.format(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
+        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/resources/concerts?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<ConcertDTO> concerts = new HashSet<>();
 
@@ -80,19 +80,18 @@ public class DefaultService implements ConcertService {
     public Set<PerformerDTO> getPerformers() throws ServiceException {
 
         // Use path parameters to get ranges of results
-        int start = 0;
         int resultListLength = RETRIEVE_WINDOW_SIZE;
+        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/resources/performers?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<PerformerDTO> performers = new HashSet<>();
 
         while (resultListLength == RETRIEVE_WINDOW_SIZE) { // While still receiving full window size sets
             try {
-                String path = String.format("/resources/performers?start=%d&size=%d", start, RETRIEVE_WINDOW_SIZE);
-                Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + path).request().get();
+                Response res = _client.target(url).request().get();
 
                 Set<PerformerDTO> resultList = res.readEntity(new GenericType<Set<PerformerDTO>>() {});
-                start += RETRIEVE_WINDOW_SIZE; // Crawl start along by window size
                 resultListLength = resultList.size(); // Set as current size of result list, used in while predicate
+                url = res.getLocation().toString();
 
                 performers.addAll(resultList);
             } catch (ServiceUnavailableException | ProcessingException e) {
