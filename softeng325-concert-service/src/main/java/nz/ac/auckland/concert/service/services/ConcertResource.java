@@ -45,6 +45,7 @@ public class ConcertResource {
     // TODO: concurrency
     // TODO: subscription
     // TODO: appendix b thing
+    // TODO: Move aws here
 
     @GET
     @Path("/concerts")
@@ -544,6 +545,26 @@ public class ConcertResource {
         }
 
         _sm.addSubscription(SubscriptionType.PERFORMER, response);
+    }
+
+    @GET
+    @Path("/images/getNotifications")
+    @Consumes(MediaType.APPLICATION_XML)
+    public void waitForNewImages(@Suspended AsyncResponse response, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            response.resume(Messages.UNAUTHENTICATED_REQUEST);
+        }
+
+        _sm.addSubscription(SubscriptionType.PERFORMER_IMAGE, response);
+    }
+
+    @GET
+    @Path("/concerts/getNotifications")
+    @Consumes(MediaType.APPLICATION_XML)
+    public void waitForNewConcerts(@Suspended AsyncResponse response, @HeaderParam("user-agent") String userAgent, @HeaderParam("Authorization") String authToken) {
+
     }
 
     private boolean tokenIsValid(String authToken, EntityManager em) {

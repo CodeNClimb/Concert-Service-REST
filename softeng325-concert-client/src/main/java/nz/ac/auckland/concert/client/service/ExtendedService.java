@@ -12,9 +12,11 @@ import javax.ws.rs.core.Response;
 public class ExtendedService extends DefaultService {
 
     // TODO: error handling for these boys
+    public ExtendedService() {
+        _client = Config.POOLED_CLIENT;
+    }
 
     public PerformerDTO createPerformer(PerformerDTO performerDTO) {
-
         try {
             Response res = _client
                     .target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers")
@@ -40,7 +42,7 @@ public class ExtendedService extends DefaultService {
                 .accept(MediaType.APPLICATION_XML)
                 .get();
 
-        return null;
+        return resw.readEntity(String.class);
     }
 
 }

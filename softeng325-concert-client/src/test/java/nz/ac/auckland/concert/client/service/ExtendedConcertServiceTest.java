@@ -99,7 +99,7 @@ public class ExtendedConcertServiceTest {
             UserDTO userDTO2 = new UserDTO("Bulldog1", "123", "Churchill", "Winston");
             service.createUser(userDTO2);
 
-            PerformerDTO newPerformer = new PerformerDTO(null, "Tyga", null, null, null);
+            PerformerDTO newPerformer = new PerformerDTO(null, "Tyga", null, null, new HashSet<>());
             service.createPerformer(newPerformer);
 
 
