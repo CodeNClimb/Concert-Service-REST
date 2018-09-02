@@ -13,9 +13,9 @@ import javax.persistence.*;
 import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -27,20 +27,22 @@ import java.util.stream.Collectors;
 @Path("/resources")
 public class ConcertResource {
 
+
     private static final Logger _logger = LoggerFactory.getLogger(ConcertResource.class);
 
     private static final long AUTHENTICATION_TIMEOUT_MINUTES = 5; // 5 minutes
     private static final long RESERVATION_TIMEOUT_MILLIS = 1000; // 5 minutes
 
+    @Context
+    private static UriInfo _uri;
+
     private final PersistenceManager _pm;
     private final SubscriptionManager _sm;
 
     public ConcertResource() {
-
         _pm = PersistenceManager.instance();
         _sm = SubscriptionManager.instance();
-
-    }
+     }
 
     // TODO: HATEOS or whatever
     // TODO: concurrency
@@ -144,7 +146,9 @@ public class ConcertResource {
     @Path("/users")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public Response createUser(UserDTO userDto, @HeaderParam("user-agent") String userAgent) {
+    public Response createUser(
+            UserDTO userDto,
+            @HeaderParam("user-agent") String userAgent) {
 
         if (userDto.getLastname() == null || userDto.getFirstname() == null || // If any necessary fields are not given
                 userDto.getUsername() == null || userDto.getPassword() == null) {
@@ -174,11 +178,15 @@ public class ConcertResource {
             return Response
                     .status(Response.Status.OK)
                     .header("Authorization", token) // place auth token in header under Authorization:
+                    .location(new URI(_uri.getBaseUri() + "resources/users/" + returnDTO.getUsername()))
                     .entity(returnDTO)
                     .build();
         } catch (RollbackException e) {
             _logger.info("Denied user agent: " + userAgent + "; Username [" + userDto.getUsername() + "] is already taken.");
             return Response.status(Response.Status.CONFLICT).entity(Messages.CREATE_USER_WITH_NON_UNIQUE_NAME).build();
+        } catch (URISyntaxException e) {
+            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
