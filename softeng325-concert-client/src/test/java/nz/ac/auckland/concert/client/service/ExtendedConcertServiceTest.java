@@ -91,7 +91,7 @@ public class ExtendedConcertServiceTest {
 
             Thread thread = new Thread(() -> {
                 String response = _service.subscribeToNewPerformers();
-                System.out.println(response);
+                Assert.assertTrue(response.contains("Tyga"));
             });
             thread.start();
 

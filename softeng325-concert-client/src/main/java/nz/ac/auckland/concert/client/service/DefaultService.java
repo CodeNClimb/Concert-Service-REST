@@ -41,7 +41,7 @@ public class DefaultService implements ConcertService {
 
     public DefaultService() {
 
-        _client = Config.DEFAULT_CLIENT;
+        _client = Config.POOLED_CLIENT;
 
     }
 

@@ -12,9 +12,9 @@ import javax.ws.rs.client.ClientBuilder;
 public class Config {
 
     // The following macros are for a thread safe pooled client.
-    public static final PoolingHttpClientConnectionManager CM = new PoolingHttpClientConnectionManager();
-    public static final CloseableHttpClient CLOSEABLE_HTTP_CLIENT = HttpClientBuilder.create().setConnectionManager(CM).build();
-    public static final ApacheHttpClient4Engine ENGINE = new ApacheHttpClient4Engine(CLOSEABLE_HTTP_CLIENT);
+    private static final PoolingHttpClientConnectionManager CM = new PoolingHttpClientConnectionManager();
+    private static final CloseableHttpClient CLOSEABLE_HTTP_CLIENT = HttpClientBuilder.create().setConnectionManager(CM).build();
+    private static final ApacheHttpClient4Engine ENGINE = new ApacheHttpClient4Engine(CLOSEABLE_HTTP_CLIENT);
     public final static Client POOLED_CLIENT = new ResteasyClientBuilder().httpEngine(ENGINE).build();
 
     // DEFAULT_CLIENT should not be used in a multi threaded environment.
