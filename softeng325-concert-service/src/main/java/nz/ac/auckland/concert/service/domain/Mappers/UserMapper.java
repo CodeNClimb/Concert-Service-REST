@@ -3,6 +3,9 @@ package nz.ac.auckland.concert.service.domain.Mappers;
 import nz.ac.auckland.concert.common.dto.UserDTO;
 import nz.ac.auckland.concert.service.domain.User;
 
+/**
+ * mapper class for mapping User domain model object to UserDTO's and vice-versa.
+ */
 public class UserMapper {
 
     public static UserDTO toDTO(User userDomain) {
@@ -20,9 +23,9 @@ public class UserMapper {
                 userDto.getPassword(),
                 userDto.getFirstname(),
                 userDto.getLastname(),
-                null, // No credit card as of yet :)
-                null, // No reservations as of yet :)
-                null // No bookings as of yet :)
+                null, //
+                null, // These fields are unneeded
+                null //
         );
     }
 

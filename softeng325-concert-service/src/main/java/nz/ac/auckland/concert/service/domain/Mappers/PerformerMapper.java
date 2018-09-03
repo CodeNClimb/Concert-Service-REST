@@ -5,6 +5,9 @@ import nz.ac.auckland.concert.service.domain.Performer;
 
 import java.util.HashSet;
 
+/**
+ * Mapper class for mapping Performer domain model to PerformerDTO and vice-versa.
+ */
 public class PerformerMapper {
 
     public static Performer toDomainModel(PerformerDTO performerDto) {

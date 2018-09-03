@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Mapper class for mapping domain Concert objects to ConcertDTO objects and vice-versa.
+ */
 public class ConcertMapper {
 
     public static Concert toDomainModel(ConcertDTO concertDto) {

@@ -3,6 +3,9 @@ package nz.ac.auckland.concert.service.domain.Mappers;
 import nz.ac.auckland.concert.common.dto.SeatDTO;
 import nz.ac.auckland.concert.service.domain.SeatReservation;
 
+/**
+ * Mapper class for mapping Seat domain model objects to SeatDTO's and vice-versa.
+ */
 public class SeatMapper {
 
     public static SeatDTO toDto(SeatReservation reservation) {
