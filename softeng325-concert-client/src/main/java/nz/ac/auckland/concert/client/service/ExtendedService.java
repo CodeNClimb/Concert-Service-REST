@@ -10,6 +10,11 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+/**
+ * This class contains all additional / optional functionality described by the assignment brief. It
+ * contains all functionality provided by the DefaultService class by inheritance, and implements a
+ * further set of methods.
+ */
 public class ExtendedService extends DefaultService {
 
         public ExtendedService() {

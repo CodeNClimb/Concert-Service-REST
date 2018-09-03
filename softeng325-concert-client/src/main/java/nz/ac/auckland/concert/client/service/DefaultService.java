@@ -20,10 +20,16 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.awt.*;
-import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Class implementing functionality outlined by the ConcertService interface. All methods
+ * here follow the general steps:
+ *  1)  Send message to service and receive response
+ *  2)  Diagnose any errors and throw appropriate exceptions
+ *  3)  Read any embedded entities and return from methods
+ */
 public class DefaultService implements ConcertService {
 
     // Constants:

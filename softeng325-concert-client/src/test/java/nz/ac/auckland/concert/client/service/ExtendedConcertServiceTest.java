@@ -24,6 +24,9 @@ import java.util.Set;
 
 import static org.junit.Assert.fail;
 
+/**
+ * Test class for testing extended "optional" functionality found in ExtendedService sub-class.
+ */
 public class ExtendedConcertServiceTest {
 
     private static Logger _logger = LoggerFactory
