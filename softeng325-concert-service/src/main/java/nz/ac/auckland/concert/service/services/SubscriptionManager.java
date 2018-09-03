@@ -9,7 +9,9 @@ import java.util.*;
 
 /**
  * Singleton class that manages subscription services and notifications for
- * subscribed users.
+ * subscribed users. An instance of this class will maintain a set of private
+ * data structures mapping AsyncResponse objects to subscription notification
+ * mechanisms that can be called by any requiring class.
  */
 public class SubscriptionManager {
 
