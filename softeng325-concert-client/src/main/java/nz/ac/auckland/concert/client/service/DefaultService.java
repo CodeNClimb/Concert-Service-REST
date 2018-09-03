@@ -116,8 +116,6 @@ public class DefaultService implements ConcertService {
 
             // Store auth. details
             _authorizationToken = res.getHeaderString("Authorization");
-            _username = newUser.getUsername();
-            _password = newUser.getPassword();
 
             res = _client
                     .target(res.getLocation())

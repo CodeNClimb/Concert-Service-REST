@@ -245,24 +245,24 @@ public class ConcertServiceTest {
 			assertEquals(Messages.CONCERT_NOT_SCHEDULED_ON_RESERVATION_DATE, e.getMessage());
 		}
 	}
-	
+
 	@Test
 	public void testMakeReservationWhereSeatsAreNotAvailable() {
 		try {
 			UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
 			_service.createUser(userDTO);
-			
+
 			Set<SeatRow> rowsOfStandardSeats = TheatreLayout.getRowsForPriceBand(PriceBand.PriceBandB);
 			int totalNumberOfStandardSeats = 0;
 			for(SeatRow row : rowsOfStandardSeats) {
 				totalNumberOfStandardSeats += TheatreLayout.getNumberOfSeatsForRow(row);
 			}
-			
+
 			LocalDateTime dateTime = LocalDateTime.of(2017, 2, 24, 17, 00);
 			ReservationRequestDTO request = new ReservationRequestDTO(totalNumberOfStandardSeats, PriceBand.PriceBandB, 1L, dateTime);
 			
 			ReservationDTO reservation = _service.reserveSeats(request);
-			
+
 			ReservationRequestDTO requestFromResponse = reservation.getReservationRequest();
 			assertEquals(request, requestFromResponse);
 			
@@ -273,7 +273,7 @@ public class ConcertServiceTest {
 			for(SeatDTO seat : reservedSeats) {
 				assertTrue(TheatreLayout.getRowsForPriceBand(PriceBand.PriceBandB).contains(seat.getRow()));
 			}
-			
+
 			// Attempt to reserve another seat.
 			request = new ReservationRequestDTO(1, PriceBand.PriceBandB, 1L, dateTime);
 			reservation = _service.reserveSeats(request);

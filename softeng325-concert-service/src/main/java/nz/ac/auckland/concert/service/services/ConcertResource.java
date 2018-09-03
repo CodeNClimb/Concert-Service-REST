@@ -40,6 +40,7 @@ public class ConcertResource {
     private final SubscriptionManager _sm;
 
     public ConcertResource() {
+
         _pm = PersistenceManager.instance();
         _sm = SubscriptionManager.instance();
     }
@@ -55,13 +56,17 @@ public class ConcertResource {
 
         EntityManager em = _pm.createEntityManager();
 
-        Concert concert = em.find(Concert.class, id);
-        ConcertDTO returnConcert = ConcertMapper.toDto(concert);
+        try {
+            Concert concert = em.find(Concert.class, id);
+            ConcertDTO returnConcert = ConcertMapper.toDto(concert);
 
-        return Response
-                .status(Response.Status.OK)
-                .entity(returnConcert)
-                .build();
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(returnConcert)
+                    .build();
+        } finally {
+            em.close();
+        }
     }
 
     @GET
@@ -73,17 +78,21 @@ public class ConcertResource {
 
         EntityManager em = _pm.createEntityManager();
 
-        Performer performer = em.find(Performer.class, id);
-        PerformerDTO returnPerformer = PerformerMapper.toDto(performer);
+        try{
+            Performer performer = em.find(Performer.class, id);
+            PerformerDTO returnPerformer = PerformerMapper.toDto(performer);
 
-        return Response
-                .status(Response.Status.OK)
-                .entity(returnPerformer)
-                .build();
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(returnPerformer)
+                    .build();
+        } finally {
+            em.close();
+        }
     }
 
     @GET
-    @Path("users/{username}")
+    @Path("/users/{username}")
     @Produces(MediaType.APPLICATION_XML)
     public Response getUser(
             @HeaderParam("user-agent") String userAgent,
@@ -91,15 +100,18 @@ public class ConcertResource {
 
         EntityManager em = _pm.createEntityManager();
 
-        User user = em.find(User.class, username);
-        UserDTO returnUser = UserMapper.toDTO(user);
+        try {
+            User user = em.find(User.class, username);
+            UserDTO returnUser = UserMapper.toDTO(user);
 
-        return Response
-                .status(Response.Status.OK)
-                .entity(returnUser)
-                .build();
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(returnUser)
+                    .build();
+        } finally {
+            em.close();
+        }
     }
-
 
     /**
      * This method allows for multiple concerts to be retrieved in batches up to the clients discretion.
@@ -233,7 +245,6 @@ public class ConcertResource {
         }
     }
 
-    // TODO: make this hateos
     /**
      * This method creates and stores a new user entity in the database of the service, given a userDTO object sent
      * from the client. The new user must have a unique username, and the user is returned an authorization token
@@ -279,7 +290,6 @@ public class ConcertResource {
                     .status(Response.Status.OK)
                     .header("Authorization", token) // place auth token in header under Authorization:
                     .location(new URI(_uri.getBaseUri() + "resources/users/" + returnDTO.getUsername())) // Return location of new user
-                    .entity(returnDTO)
                     .build();
         } catch (RollbackException e) {
             _logger.info("Denied user agent: " + userAgent + "; Username [" + userDto.getUsername() + "] is already taken.");
@@ -292,7 +302,6 @@ public class ConcertResource {
         }
     }
 
-    // TODO: make this hateos
     /**
      * This method creates a credit card instance under a user. A user can only ever have one credit card
      * associated with them at any one point. Authorization is required and can be provided with an authorization
@@ -336,11 +345,7 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.NO_CONTENT)
-                    .location(new URI(_uri.getBaseUri() + "resources/users/" + foundUser.getUsername() + "/payment"))
                     .build();
-        } catch (URISyntaxException e) {
-            _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } finally {
             em.close();
         }
@@ -646,7 +651,6 @@ public class ConcertResource {
             return Response
                     .status(Response.Status.OK)
                     .location(new URI(_uri.getBaseUri() + "resources/performers/" + newPerformer.getId()))
-                    .entity(returnPerformerDTO)
                     .build();
         } catch (URISyntaxException e) {
             _logger.info("Denied user agent: " + userAgent + "; could not convert return URI");
