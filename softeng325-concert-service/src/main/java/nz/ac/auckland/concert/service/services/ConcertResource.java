@@ -564,9 +564,6 @@ public class ConcertResource {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
             }
 
-            EntityTransaction tx = em.getTransaction();
-            tx.begin();
-
             TypedQuery<CreditCard> creditCardQuery = em.createQuery("SELECT c FROM Token t JOIN t.user u JOIN u.creditCard c WHERE t.token = :token", CreditCard.class);
             creditCardQuery.setParameter("token", authToken);
             try {
@@ -580,6 +577,10 @@ public class ConcertResource {
             reservationQuery.setParameter("token", authToken);
             Reservation foundReservation = reservationQuery.getSingleResult();
 
+            EntityTransaction tx = em.getTransaction();
+            tx.begin(); // make the operation of checking reservation expiry to making booking atomic
+
+            // Check if reservation has expired
             if (!LocalDateTime.now().isBefore(foundReservation.getExpiry())) {
                 _logger.info("Denied user agent: " + userAgent + "; reservation for concert id: " +
                         reservationDto.getReservationRequest().getConcertId() + " on date: " + reservationDto.getReservationRequest().getDate() +
@@ -589,7 +590,7 @@ public class ConcertResource {
 
             Booking newBooking = new Booking(foundReservation, findUser(authToken, em));
             em.persist(newBooking);
-            tx.commit();
+            tx.commit(); // End of atomic operation
             _logger.info("Created booking for concert id: " +
                     reservationDto.getReservationRequest().getConcertId() + " on date: " + reservationDto.getReservationRequest().getDate() +
                     "; Reply to user agent: " + userAgent);
