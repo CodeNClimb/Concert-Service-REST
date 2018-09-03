@@ -43,7 +43,7 @@ public class ConcertResource {
         _pm = PersistenceManager.instance();
         _sm = SubscriptionManager.instance();
     }
-    
+
     /**
      * Retrieves a single concert given an id
      * @param userAgent
