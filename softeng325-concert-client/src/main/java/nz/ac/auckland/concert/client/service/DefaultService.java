@@ -120,6 +120,7 @@ public class DefaultService implements ConcertService {
             res = _client
                     .target(res.getLocation())
                     .request()
+                    .header("Authorization", _authorizationToken) // Insert authorisation token
                     .get();
 
             return res.readEntity(UserDTO.class);

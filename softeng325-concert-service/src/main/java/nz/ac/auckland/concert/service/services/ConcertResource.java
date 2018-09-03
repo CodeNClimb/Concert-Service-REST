@@ -27,17 +27,16 @@ import java.util.stream.Collectors;
 @Path("/resources")
 public class ConcertResource {
 
-
     private static final Logger _logger = LoggerFactory.getLogger(ConcertResource.class);
 
     private static final long AUTHENTICATION_TIMEOUT_MINUTES = 5; // 5 minutes
-    private static final long RESERVATION_TIMEOUT_MILLIS = 1000; // 5 minutes
+    private static final long RESERVATION_TIMEOUT_MILLIS = 1000; // 1 second
 
-    @Context
+    @Context // Information about the service hosted URI
     private static UriInfo _uri;
 
-    private final PersistenceManager _pm;
-    private final SubscriptionManager _sm;
+    private final PersistenceManager _pm; // Persistence
+    private final SubscriptionManager _sm; // Subscription management
 
     public ConcertResource() {
 
@@ -47,6 +46,12 @@ public class ConcertResource {
 
     // TODO: concurrency
 
+    /**
+     * Retrieves a single concert given an id
+     * @param userAgent
+     * @param id
+     * @return ConcertDTO
+     */
     @GET
     @Path("/concerts/{id}")
     @Produces(MediaType.APPLICATION_XML)
@@ -69,6 +74,12 @@ public class ConcertResource {
         }
     }
 
+    /**
+     * Retrieves a single performer given by id
+     * @param userAgent
+     * @param id
+     * @return PerformerDTO
+     */
     @GET
     @Path("/performers/{id}")
     @Produces(MediaType.APPLICATION_XML)
@@ -91,16 +102,33 @@ public class ConcertResource {
         }
     }
 
+    /**
+     * Retrieves a single user given a username. Requires authentication by authorization token.
+     * @param userAgent
+     * @param username
+     * @return UserDTO
+     */
     @GET
     @Path("/users/{username}")
     @Produces(MediaType.APPLICATION_XML)
     public Response getUser(
             @HeaderParam("user-agent") String userAgent,
+            @HeaderParam("Authorization") String authToken,
             @PathParam("username") String username) {
+
+        if (authToken == null) { // User has no access token
+            _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
+            return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
+        }
 
         EntityManager em = _pm.createEntityManager();
 
         try {
+            if (!tokenIsValid(authToken, em)) { // If token wasn't found or is expired return unauthorized
+                _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
+                return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
+            }
+
             User user = em.find(User.class, username);
             UserDTO returnUser = UserMapper.toDTO(user);
 
