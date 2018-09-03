@@ -169,7 +169,7 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
-                    .location(new URI(_uri.getBaseUri() + String.format("resources/concerts?start=%d&size=%d", start + size, size)))
+                    .location(new URI(_uri.getBaseUri() + String.format("resources/concerts?start=%d&size=%d", start + size, size))) // next batch of concerts
                     .entity(entity)
                     .build();
         } catch (URISyntaxException e) {
@@ -208,7 +208,7 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
-                    .location(new URI(_uri.getBaseUri() + String.format("resources/performers?start=%d&size=%d", start + size, size)))
+                    .location(new URI(_uri.getBaseUri() + String.format("resources/performers?start=%d&size=%d", start + size, size))) // Next batch of performers
                     .entity(entity)
                     .build();
         } catch (URISyntaxException e) {
@@ -261,7 +261,7 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
-                    .location(new URI(_uri.getBaseUri() + String.format("resources/users/book?start=%d&size=%d", start + size, size)))
+                    .location(new URI(_uri.getBaseUri() + String.format("resources/users/book?start=%d&size=%d", start + size, size))) // Next batch of bookings
                     .entity(entity)
                     .build();
 
@@ -299,13 +299,13 @@ public class ConcertResource {
 
         try {
             EntityTransaction tx = em.getTransaction();
-            tx.begin();
+            tx.begin(); // Act of creating user and storing corresponding token is atomic
 
             User newUser = UserMapper.toDomain(userDto);
             em.persist(newUser);
 
             String token = generateUserToken();
-            em.persist(new Token(newUser, token, LocalDateTime.now().plus(Duration.ofMinutes(AUTHENTICATION_TIMEOUT_MINUTES)))); // Create and persist auth. token for user
+            em.persist(new Token(newUser, token, LocalDateTime.now().plus(Duration.ofMinutes(AUTHENTICATION_TIMEOUT_MINUTES)))); // Tokens expiry id .now() plus timeout duration
 
             tx.commit();
             tx.begin();
@@ -413,22 +413,24 @@ public class ConcertResource {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.AUTHENTICATE_USER_WITH_ILLEGAL_PASSWORD).build();
             }
 
+            EntityTransaction tx = em.getTransaction();
+            tx.begin(); // Ensure the act of reading token status then rewriting (if needed) is atomic - ensures no conflicting token generation
+
             // Login is correct, so we return token either newly generated or already one stored if still active.
             Token token = em.find(Token.class, foundUser.getUsername()); // One token for one user
 
             // either token does not exist for this user or has timed out - if has timed out service should provide a new one
             String tokenString;
-            if (token == null || (token.getExpiry().isBefore(LocalDateTime.now()))) {
+            if (token == null || (token.getExpiry().isBefore(LocalDateTime.now()))) { // Token is null OR Token has timed out
 
                 if (token != null) // Remove the current token if one exists
+                {
                     em.remove(token);
+                }
 
-                tokenString = generateUserToken();
+                tokenString = generateUserToken(); // Overwrite / rewrite token
 
                 // Place new token into db
-                EntityTransaction tx = em.getTransaction();
-                tx.begin();
-
                 Token tokenToPlace = new Token(foundUser, tokenString, LocalDateTime.now().plus(Duration.ofMinutes(AUTHENTICATION_TIMEOUT_MINUTES)));
                 em.persist(tokenToPlace);
 
@@ -442,7 +444,7 @@ public class ConcertResource {
 
             return Response
                     .status(Response.Status.OK)
-                    .header("Authorization", tokenString) // place auth token in header under Authorization:
+                    .header("Authorization", tokenString) // place auth token in header under Authorization
                     .entity(UserMapper.toDTO(foundUser))
                     .build();
         } finally {
@@ -498,12 +500,13 @@ public class ConcertResource {
             }
 
             EntityTransaction tx = em.getTransaction();
-            tx.begin();
+            tx.begin(); // Ensure entire reading of seats unavailable AND reservation stages are atomic - ensures no conflicting requests from differing clients
 
             Set<SeatDTO> unavailableSeats;
 
             // Get all existing bookings and current reservations for this concert on this date
-            TypedQuery<SeatReservation> unavailableSeatsBookingQuery = em.createQuery("SELECT s FROM Booking b JOIN b.reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date", SeatReservation.class);
+            TypedQuery<SeatReservation> unavailableSeatsBookingQuery = em.createQuery(
+                    "SELECT s FROM Booking b JOIN b.reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date", SeatReservation.class);
             unavailableSeatsBookingQuery.setParameter("concertId", requestDto.getConcertId());
             unavailableSeatsBookingQuery.setParameter("date",  requestDto.getDate());
             List<SeatReservation> seatsBooked = unavailableSeatsBookingQuery.getResultList();
@@ -512,18 +515,19 @@ public class ConcertResource {
             unavailableSeats = seatsBooked.stream().map(SeatMapper::toDto).collect(Collectors.toSet());
 
             // Find all seats currently reserved by another reservation process - check that timeout has not been reached using current time
-            TypedQuery<SeatReservation> unavailableSeatsReservationQuery = em.createQuery("SELECT s FROM Reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date AND r.expiry > :currentTime", SeatReservation.class);
+            TypedQuery<SeatReservation> unavailableSeatsReservationQuery = em.createQuery( // Note: this query checks for expiry time so only ACTIVE reservations are returned
+                    "SELECT s FROM Reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date AND r.expiry > :currentTime", SeatReservation.class);
             unavailableSeatsReservationQuery.setParameter("concertId", requestDto.getConcertId());
             unavailableSeatsReservationQuery.setParameter("date", requestDto.getDate());
             unavailableSeatsReservationQuery.setParameter("currentTime", LocalDateTime.now());
             List<SeatReservation> seatsCurrentlyReserved = unavailableSeatsReservationQuery.getResultList();
 
-            // Add all seats found in returned reservations to current unavailable seats
-            // If a seat is both booked AND still under valid reservation it is only added to unavailableSeats ONCE as it is a Set<>
+            // Add all seats found in returned active reservations to current unavailable seats
+            // If a seat is both booked AND still under valid reservation it is only added to unavailableSeats ONCE as it is a Set<> which does not allow duplicates
             seatsCurrentlyReserved.stream().map(SeatMapper::toDto).forEach(unavailableSeats::add);
             _logger.info("There are currently (" + unavailableSeats.size() + ") unavailable seats for concert id: " + requestDto.getConcertId() + " on date: " + requestDto.getDate());
 
-            // Acquire reserved seats
+            // Acquire reserved seats w.r.t. unavailable seats
             Set<SeatDTO> reservedSeats = TheatreUtility.findAvailableSeats(requestDto.getNumberOfSeats(), requestDto.getSeatType(), unavailableSeats);
             if (reservedSeats.isEmpty()) { // Not enough seats left to reserve
                 _logger.info("Denied user agent: " + userAgent + "; Requested (" + requestDto.getNumberOfSeats() + ") seats; Not enough available seats for concert id: " + requestDto.getConcertId() + " on date: " + requestDto.getDate());
@@ -532,7 +536,7 @@ public class ConcertResource {
 
             // Create new reservation and persist to database
             Reservation newReservation = new Reservation(
-                    reservedSeats.stream().map(SeatMapper::toReservation).collect(Collectors.toSet()), // Reserved seats
+                    reservedSeats.stream().map(SeatMapper::toReservation).collect(Collectors.toSet()), // Client's reserved seats
                     em.find(Concert.class, requestDto.getConcertId()), // Corresponding concert from db
                     requestDto.getDate(), // Given date
                     LocalDateTime.now().plus(Duration.ofMillis(RESERVATION_TIMEOUT_MILLIS)), // now plus given reservation timeout
@@ -541,7 +545,6 @@ public class ConcertResource {
             User user = findUser(authToken, em);
             user.setReservation(newReservation);
             User mergedUser = em.merge(user);
-            em.flush(); // generate id for newReservation
             tx.commit();
 
             ReservationDTO returnReservation = new ReservationDTO(
@@ -579,7 +582,7 @@ public class ConcertResource {
             @HeaderParam("user-agent") String userAgent,
             @HeaderParam("Authorization") String authToken) {
 
-        if (authToken == null) {
+        if (authToken == null) { // no authorization token present
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
             return Response.status(Response.Status.FORBIDDEN).entity(Messages.UNAUTHENTICATED_REQUEST).build();
         }
@@ -587,7 +590,7 @@ public class ConcertResource {
         EntityManager em = _pm.createEntityManager();
 
         try {
-            if (!tokenIsValid(authToken, em)) {
+            if (!tokenIsValid(authToken, em)) { // Authentication token has expired
                 _logger.info("Denied user agent : " + userAgent + "; With expired/invalid authentication token: " + authToken);
                 return Response.status(Response.Status.UNAUTHORIZED).entity(Messages.BAD_AUTHENTICATON_TOKEN).build();
             }
@@ -596,17 +599,17 @@ public class ConcertResource {
             creditCardQuery.setParameter("token", authToken);
             try {
                 CreditCard creditCard = creditCardQuery.getSingleResult();
-            } catch (NoResultException e) {
+            } catch (NoResultException e) { // User doesn't have any credit card associated with their account
                 _logger.info("Denied user agent: " + userAgent + "; No credit card found under account.");
                 return Response.status(Response.Status.PAYMENT_REQUIRED).entity(Messages.CREDIT_CARD_NOT_REGISTERED).build();
             }
 
-            TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
-            reservationQuery.setParameter("token", authToken);
-            Reservation foundReservation = reservationQuery.getSingleResult();
-
             EntityTransaction tx = em.getTransaction();
             tx.begin(); // make the operation of checking reservation expiry to making booking atomic
+
+            TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
+            reservationQuery.setParameter("token", authToken);
+            Reservation foundReservation = reservationQuery.getSingleResult(); // Get reservation for that user (obviously only one allowed at any one time)
 
             // Check if reservation has expired
             if (!LocalDateTime.now().isBefore(foundReservation.getExpiry())) {
@@ -672,7 +675,6 @@ public class ConcertResource {
 
             tx.commit();
             _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name: " + newPerformer.getName());
-            PerformerDTO returnPerformerDTO = PerformerMapper.toDto(newPerformer);
 
             _sm.notifySubscribers(SubscriptionType.PERFORMER, newPerformer);
             _logger.info("Subscribers notified of new performer: " + newPerformer.getName());
@@ -850,6 +852,7 @@ public class ConcertResource {
             response.resume(Messages.UNAUTHENTICATED_REQUEST);
         }
 
+        // Add AsyncResponse to subscribers for subscription type
         _sm.addSubscription(SubscriptionType.PERFORMER_IMAGE, response);
         _logger.info("Subscriber added for new images");
     }
@@ -875,6 +878,7 @@ public class ConcertResource {
             response.resume(Messages.UNAUTHENTICATED_REQUEST);
         }
 
+        // Add AsyncResponse to subscribers for subscription type
         _sm.addSubscriptionWithId(SubscriptionType.PERFORMER_IMAGE, response, Long.decode(performerId));
         _logger.info("Subscriber added for new images for performer with id (" + performerId + ")");
     }
@@ -898,6 +902,7 @@ public class ConcertResource {
             response.resume(Messages.UNAUTHENTICATED_REQUEST);
         }
 
+        // Add AsyncResponse to subscribers for subscription type
         _sm.addSubscription(SubscriptionType.CONCERT, response);
         _logger.info("Subscriber added for new concerts");
     }
