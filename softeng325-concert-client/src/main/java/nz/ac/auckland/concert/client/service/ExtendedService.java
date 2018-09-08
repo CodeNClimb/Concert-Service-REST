@@ -6,7 +6,10 @@ import nz.ac.auckland.concert.common.message.Messages;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServiceUnavailableException;
+import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -100,15 +103,26 @@ public class ExtendedService extends DefaultService {
     }
 
 
-    public String subscribeToNewPerformers() {
-        Response res = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers/getNotifications")
+    public void subscribeToNewPerformers() {
+        AsyncInvoker invoker = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers/getNotifications")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
-                .get();
+                .async();
 
-        return res.readEntity(String.class);
+        invoker.get(new InvocationCallback<String>() {
+
+            @Override
+            public void completed(String s) {
+                System.out.println(s);
+                invoker.get(this);
+            }
+
+            @Override
+            public void failed(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
     }
 
     public String subscribeToNewConcerts() {

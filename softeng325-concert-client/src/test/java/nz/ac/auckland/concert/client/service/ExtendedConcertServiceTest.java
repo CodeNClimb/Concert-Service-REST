@@ -97,8 +97,7 @@ public class ExtendedConcertServiceTest {
             _service.createUser(userDTO);
 
             Thread thread = new Thread(() -> {
-                String response = _service.subscribeToNewPerformers();
-                Assert.assertTrue(response.contains("Tyga"));
+                _service.subscribeToNewPerformers();
             });
             thread.start();
 
@@ -109,6 +108,14 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer = new PerformerDTO(null, "Tyga", null, null, new HashSet<>());
             service.createPerformer(newPerformer);
 
+            PerformerDTO newPerformer2 = new PerformerDTO(null, "Ravid Aharon", null, null, new HashSet<>());
+            service.createPerformer(newPerformer2);
+
+            PerformerDTO newPerformer3 = new PerformerDTO(null, "Stars of the Lid", null, null, new HashSet<>());
+            service.createPerformer(newPerformer3);
+
+            PerformerDTO newPerformer4 = new PerformerDTO(null, "Aphex Twin", null, null, new HashSet<>());
+            service.createPerformer(newPerformer4);
 
         } catch(ServiceException e) {
             fail();
