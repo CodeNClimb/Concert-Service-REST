@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.client.service;
 
+import nz.ac.auckland.concert.client.clientApp.Subscription;
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.common.message.Messages;
@@ -8,7 +9,6 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -20,8 +20,11 @@ import javax.ws.rs.core.Response;
  */
 public class ExtendedService extends DefaultService {
 
-        public ExtendedService() {
+    private boolean _staySubscribed;
+
+    public ExtendedService() {
         _client = Config.POOLED_CLIENT;
+        _staySubscribed = false;
     }
 
     public PerformerDTO createPerformer(PerformerDTO performerDTO) {
@@ -103,7 +106,8 @@ public class ExtendedService extends DefaultService {
     }
 
 
-    public void subscribeToNewPerformers() {
+    public void subscribeToNewPerformers(Subscription subscription) {
+        _staySubscribed = true;
         AsyncInvoker invoker = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers/getNotifications")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
@@ -111,51 +115,109 @@ public class ExtendedService extends DefaultService {
                 .async();
 
         invoker.get(new InvocationCallback<String>() {
-
             @Override
             public void completed(String s) {
-                System.out.println(s);
-                invoker.get(this);
+                if (_staySubscribed) {
+                    subscription.updateSubscription(s);
+                    invoker.get(this);
+                }
             }
 
             @Override
             public void failed(Throwable throwable) {
-                throwable.printStackTrace();
+                if (_staySubscribed) {
+                    throwable.printStackTrace();
+                    invoker.get(this);
+                }
             }
         });
     }
 
-    public String subscribeToNewConcerts() {
-        Response res = _client
+    public void subscribeToNewConcerts(Subscription subscription) {
+        _staySubscribed = true;
+        AsyncInvoker invoker = _client
                 .target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts/getNotifications")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
-                .get();
+                .async();
 
-        return res.readEntity(String.class);
+        invoker.get(new InvocationCallback<String>() {
+            @Override
+            public void completed(String s) {
+                if (_staySubscribed) {
+                    subscription.updateSubscription(s);
+                    invoker.get(this);
+                }
+            }
+
+            @Override
+            public void failed(Throwable throwable) {
+                if (_staySubscribed) {
+                    throwable.printStackTrace();
+                    invoker.get(this);
+                }
+            }
+        });
     }
 
-    public String subscribeToNewImages() {
-        Response res = _client
+    public void subscribeToNewImages(Subscription subscription) {
+        _staySubscribed = true;
+        AsyncInvoker invoker = _client
                 .target(Config.LOCAL_SERVER_ADDRESS + "/resources/images/getNotifications/")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
-                .get();
+                .async();
 
-        return res.readEntity(String.class);
+        invoker.get(new InvocationCallback<String>() {
+            @Override
+            public void completed(String s) {
+                if (_staySubscribed) {
+                    subscription.updateSubscription(s);
+                    invoker.get(this);
+                }
+            }
+
+            @Override
+            public void failed(Throwable throwable) {
+                if (_staySubscribed) {
+                    throwable.printStackTrace();
+                    invoker.get(this);
+                }
+            }
+        });
+
     }
 
-    public String subscribetoNewImagesForPerformer(PerformerDTO performerDTO) {
-        Response res = _client
+    public void subscribeToNewImagesForPerformer(PerformerDTO performerDTO, Subscription subscription) {
+        AsyncInvoker invoker = _client
                 .target(Config.LOCAL_SERVER_ADDRESS + "/resources/images/getNotifications/" + performerDTO.getId())
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
-                .get();
+                .async();
 
-        return res.readEntity(String.class);
+        invoker.get(new InvocationCallback<String>() {
+            @Override
+            public void completed(String s) {
+                if (_staySubscribed) {
+                    subscription.updateSubscription(s);
+                    invoker.get(this);
+                }
+            }
+
+            @Override
+            public void failed(Throwable throwable) {
+                if (_staySubscribed) {
+                    throwable.printStackTrace();
+                    invoker.get(this);
+                }
+            }
+        });
+    }
+
+    public void unsubscribe() {
     }
 
 }

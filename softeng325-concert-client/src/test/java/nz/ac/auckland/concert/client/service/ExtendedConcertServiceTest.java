@@ -1,5 +1,6 @@
 package nz.ac.auckland.concert.client.service;
 
+import nz.ac.auckland.concert.client.clientApp.Subscription;
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.common.dto.UserDTO;
@@ -96,9 +97,8 @@ public class ExtendedConcertServiceTest {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
 
-            Thread thread = new Thread(() -> {
-                _service.subscribeToNewPerformers();
-            });
+            Subscription subscription = new Subscription();
+            Thread thread = new Thread(() -> _service.subscribeToNewPerformers(subscription));
             thread.start();
 
             ExtendedService service = new ExtendedService();
@@ -108,14 +108,30 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer = new PerformerDTO(null, "Tyga", null, null, new HashSet<>());
             service.createPerformer(newPerformer);
 
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("Tyga"));
+            System.out.println(subscription.getSubscription());
+
             PerformerDTO newPerformer2 = new PerformerDTO(null, "Ravid Aharon", null, null, new HashSet<>());
             service.createPerformer(newPerformer2);
+
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("Ravid Aharon"));
+            System.out.println(subscription.getSubscription());
 
             PerformerDTO newPerformer3 = new PerformerDTO(null, "Stars of the Lid", null, null, new HashSet<>());
             service.createPerformer(newPerformer3);
 
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("Stars of the Lid"));
+            System.out.println(subscription.getSubscription());
+
             PerformerDTO newPerformer4 = new PerformerDTO(null, "Aphex Twin", null, null, new HashSet<>());
             service.createPerformer(newPerformer4);
+
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("Aphex Twin"));
+            System.out.println(subscription.getSubscription());
 
         } catch(ServiceException e) {
             fail();
@@ -128,12 +144,8 @@ public class ExtendedConcertServiceTest {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
 
-            Thread thread = new Thread(() -> {
-                String response = _service.subscribeToNewConcerts();
-                Assert.assertTrue(response.contains("Heres a test!"));
-                Assert.assertTrue(response.contains("Panic! at the Disco"));
-                Assert.assertTrue(response.contains("Ed Sheeran"));
-            });
+            Subscription subscription = new Subscription();
+            Thread thread = new Thread(() -> _service.subscribeToNewConcerts(subscription));
             thread.start();
 
             ExtendedService service = new ExtendedService();
@@ -159,7 +171,10 @@ public class ExtendedConcertServiceTest {
                     performers);
             service.createConcert(concertDTO);
 
-
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("Heres a test!"));
+            System.out.println(subscription.getSubscription());
+            System.exit(0);
         } catch(ServiceException e) {
             fail();
         }
@@ -171,11 +186,8 @@ public class ExtendedConcertServiceTest {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
 
-            Thread thread = new Thread(() -> {
-                String response = _service.subscribeToNewImages();
-                Assert.assertTrue(response.contains("test.jpg"));
-                Assert.assertTrue(response.contains("Panic! at the Disco"));
-            });
+            Subscription subscription = new Subscription();
+            Thread thread = new Thread(() -> _service.subscribeToNewImages(subscription));
             thread.start();
 
             ExtendedService service = new ExtendedService();
@@ -185,7 +197,10 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer = new PerformerDTO(1L, null, "test.jpg", null, new HashSet<>());
             service.addImage(newPerformer);
 
-
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("test.jpg"));
+            System.out.println(subscription.getSubscription());
+            System.exit(0);
         } catch(ServiceException e) {
             fail();
         }
@@ -197,11 +212,10 @@ public class ExtendedConcertServiceTest {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
 
+            Subscription subscription = new Subscription();
             Thread thread = new Thread(() -> {
                 PerformerDTO performerDTO = new PerformerDTO(1L, null, null, null, new HashSet<>());
-                String response = _service.subscribetoNewImagesForPerformer(performerDTO);
-                Assert.assertTrue(response.contains("test.jpg"));
-                Assert.assertTrue(response.contains("Panic! at the Disco"));
+                _service.subscribeToNewImagesForPerformer(performerDTO, subscription);
             });
             thread.start();
 
@@ -212,7 +226,10 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer = new PerformerDTO(1L, null, "test.jpg", null, new HashSet<>());
             service.addImage(newPerformer);
 
-
+            Assert.assertTrue(subscription.isUnreadNotification());
+            Assert.assertTrue(subscription.getSubscription().contains("text.jpg"));
+            System.out.println(subscription.getSubscription());
+            System.exit(0);
         } catch(ServiceException e) {
             fail();
         }

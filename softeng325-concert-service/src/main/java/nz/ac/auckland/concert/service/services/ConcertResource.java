@@ -1,11 +1,13 @@
 package nz.ac.auckland.concert.service.services;
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.*;
 import nz.ac.auckland.concert.service.domain.Mappers.*;
 import nz.ac.auckland.concert.service.domain.Types.SubscriptionType;
 import nz.ac.auckland.concert.service.util.TheatreUtility;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -674,7 +676,7 @@ public class ConcertResource {
             tx.commit();
             _logger.info("Successfully created new performer with id: " + newPerformer.getId() + " and name: " + newPerformer.getName());
 
-            _sm.notifySubscribers(SubscriptionType.PERFORMER, newPerformer);
+            _sm.notifySubscribers(SubscriptionType.PERFORMER, newPerformer, _uri.getBaseUri() + "resources/performers/" + newPerformer.getId());
             _logger.info("Subscribers notified of new performer: " + newPerformer.getName());
 
             return Response
@@ -733,7 +735,7 @@ public class ConcertResource {
             _logger.info("Successfully created new concert with id: " + newConcert.getId() + ", name: " + newConcert.getTitle() +
                     " and performers: " + Arrays.toString(newConcert.getPerformers().stream().map(Performer::getName).toArray()));
 
-            _sm.notifySubscribers(SubscriptionType.CONCERT, newConcert);
+            _sm.notifySubscribers(SubscriptionType.CONCERT, newConcert, _uri.getBaseUri() + "resources/concerts/" + newConcert.getId());
             _logger.info("Subscribers notified of new concert: " + newConcert.getTitle());
 
             return Response
@@ -791,8 +793,8 @@ public class ConcertResource {
             _logger.info("Successfully added image " + performer.getImageName() + " to performer " + performer.getName() + " with id (" + performer.getId() + ")");
             PerformerDTO returnPerformerDto = PerformerMapper.toDto(performer);
 
-            _sm.notifySubscribers(SubscriptionType.PERFORMER_IMAGE, performer);
-            _sm.notifySubscribersWithId(SubscriptionType.PERFORMER_IMAGE, performer, performer.getId());
+            _sm.notifySubscribers(SubscriptionType.PERFORMER_IMAGE, performer, _uri.getBaseUri() + "resources/images/" + performer.getImageName());
+            _sm.notifySubscribersWithId(SubscriptionType.PERFORMER_IMAGE, performer, performer.getId(), _uri.getBaseUri() + "resources/images/" + performer.getImageName());
             _logger.info("Subscribers notified of new image " + performer.getImageName() + " for performer " + performer.getName());
 
             return Response

@@ -6,6 +6,7 @@ import nz.ac.auckland.concert.service.domain.Types.SubscriptionType;
 
 import javax.ws.rs.container.AsyncResponse;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Singleton class that manages subscription services and notifications for
@@ -14,6 +15,10 @@ import java.util.*;
  * mechanisms that can be called by any requiring class.
  */
 public class SubscriptionManager {
+
+    private final ReentrantLock _performerLock = new ReentrantLock();
+    private final ReentrantLock _concertLock = new ReentrantLock();
+    private final ReentrantLock _imageLock = new ReentrantLock();
 
     private static SubscriptionManager _instance = null;
 
@@ -43,11 +48,17 @@ public class SubscriptionManager {
     public void addSubscription(SubscriptionType subscriptionType, AsyncResponse asyncResponse) {
 
         if (subscriptionType == SubscriptionType.PERFORMER) {
-            _performerResponses.add(asyncResponse);
+            synchronized (_performerLock) {
+                _performerResponses.add(asyncResponse);
+            }
         } else if (subscriptionType == SubscriptionType.CONCERT) {
-            _concertResponses.add(asyncResponse);
+            synchronized (_concertLock) {
+                _concertResponses.add(asyncResponse);
+            }
         } else if (subscriptionType == SubscriptionType.PERFORMER_IMAGE) {
-            _imageResponses.add(asyncResponse);
+            synchronized (_imageLock) {
+                _imageResponses.add(asyncResponse);
+            }
         }
 
     }
@@ -55,46 +66,58 @@ public class SubscriptionManager {
     public void addSubscriptionWithId(SubscriptionType subscriptionType, AsyncResponse asyncResponse, Long id) {
 
         if (subscriptionType == SubscriptionType.PERFORMER_IMAGE) {
-            if (_imageResponsesWithIds.get(id) == null) {
-                _imageResponsesWithIds.put(id, new ArrayList<>());
+            synchronized (_imageLock) {
+                _imageResponsesWithIds.computeIfAbsent(id, k -> new ArrayList<>());
+                _imageResponsesWithIds.get(id).add(asyncResponse);
             }
-            _imageResponsesWithIds.get(id).add(asyncResponse);
         }
 
     }
 
-    public void notifySubscribers(SubscriptionType subscriptionType, Object object) {
+    public void notifySubscribers(SubscriptionType subscriptionType, Object object, String url) {
 
         if (subscriptionType == SubscriptionType.PERFORMER) {
-            String name = ((Performer)object).getName();
-            for (AsyncResponse response : _performerResponses) {
-                response.resume("There's a new performer in town! Check out " + name + " and hang tight for dates!");
+            synchronized (_performerLock) {
+                String name = ((Performer)object).getName();
+                for (AsyncResponse response : _performerResponses) {
+                    response.resume("There's a new performer in town! Check out " + name + " at: " + url);
+                }
+                _performerResponses.clear();
             }
         } else if (subscriptionType == SubscriptionType.CONCERT) {
             Concert concert = (Concert)object;
-            for (AsyncResponse response : _concertResponses) {
-                response.resume("A new concert has been added called " + concert.getTitle() + " featuring " + Arrays.toString(concert.getPerformers().stream().map(Performer::getName).toArray()));
+            synchronized (_concertLock) {
+                for (AsyncResponse response : _concertResponses) {
+                    response.resume("A new concert has been added called " + concert.getTitle() + " featuring " + Arrays.toString(concert.getPerformers().stream().map(Performer::getName).toArray()) + ", Check it out at: " + url);
+                }
+                _concertResponses.clear();
             }
         } else if (subscriptionType == SubscriptionType.PERFORMER_IMAGE) {
-            Performer performer = (Performer)object;
-            for (AsyncResponse response : _imageResponses) {
-                response.resume("A new image " + performer.getImageName() + " has been added for " + performer.getName());
+            synchronized (_imageLock) {
+                Performer performer = (Performer)object;
+                for (AsyncResponse response : _imageResponses) {
+                    response.resume("A new image " + performer.getImageName() + " has been added for " + performer.getName() + ", check it out at: " + url);
+                }
+                _imageResponses.clear();
             }
         }
-
     }
 
-    public void notifySubscribersWithId(SubscriptionType subscriptionType, Object object, Long id) {
+    public void notifySubscribersWithId(SubscriptionType subscriptionType, Object object, Long id, String url) {
 
         if (subscriptionType == SubscriptionType.PERFORMER_IMAGE) {
-            Performer performer = (Performer)object;
+            synchronized (_performerLock) {
+                Performer performer = (Performer)object;
 
-            if (_imageResponsesWithIds.get(id) == null) {
-                return;
-            }
+                if (_imageResponsesWithIds.get(id) == null) {
+                    return;
+                }
 
-            for (AsyncResponse response : _imageResponsesWithIds.get(id)) {
-                response.resume("A new image " + performer.getImageName() + " has been added for " + performer.getName());
+                for (AsyncResponse response : _imageResponsesWithIds.get(id)) {
+                    response.resume("A new image " + performer.getImageName() + " has been added for " + performer.getName());
+
+                }
+                _imageResponsesWithIds.get(id).clear();
             }
         }
 
