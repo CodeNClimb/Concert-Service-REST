@@ -61,7 +61,7 @@ public class DefaultService implements ConcertService {
 
         // Use path parameters to get ranges of results
         int resultListLength = RETRIEVE_WINDOW_SIZE;
-        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/resources/concerts?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
+        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/concerts?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<ConcertDTO> concerts = new HashSet<>();
 
@@ -87,7 +87,7 @@ public class DefaultService implements ConcertService {
 
         // Use path parameters to get ranges of results
         int resultListLength = RETRIEVE_WINDOW_SIZE;
-        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/resources/performers?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
+        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/performers?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<PerformerDTO> performers = new HashSet<>();
 
@@ -112,7 +112,7 @@ public class DefaultService implements ConcertService {
     public UserDTO createUser(UserDTO newUser) throws ServiceException {
 
         try {
-            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users").request()
+            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/users").request()
                     .accept(MediaType.APPLICATION_XML).post(Entity.xml(newUser));
 
             switch(res.getStatus()) {
@@ -139,7 +139,7 @@ public class DefaultService implements ConcertService {
     public UserDTO authenticateUser(UserDTO user) throws ServiceException {
 
         try {
-            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/login").request()
+            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/users/login").request()
                     .accept(MediaType.APPLICATION_XML).post(Entity.xml(user));
 
             switch(res.getStatus()) {
@@ -189,7 +189,7 @@ public class DefaultService implements ConcertService {
 
         try {
             Response res = _client
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve")
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/reserve")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
@@ -215,7 +215,7 @@ public class DefaultService implements ConcertService {
 
         try {
             Response res = _client
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/reserve/book")
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/reserve/book")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
@@ -237,7 +237,7 @@ public class DefaultService implements ConcertService {
 
         try {
             Response res = _client
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/users/payment")
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/users/payment")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
@@ -257,7 +257,7 @@ public class DefaultService implements ConcertService {
 
         // Use path parameters to get ranges of results
         int resultListLength = RETRIEVE_WINDOW_SIZE;
-        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/resources/users/book?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
+        String url = Config.LOCAL_SERVER_ADDRESS + String.format("/users/book?start=%d&size=%d", 0, RETRIEVE_WINDOW_SIZE);
 
         Set<BookingDTO> bookings = new HashSet<>();
 

@@ -27,7 +27,7 @@ public class ExtendedService extends DefaultService {
     public PerformerDTO createPerformer(PerformerDTO performerDTO) {
         try {
             Response res = _client
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers")
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/performers")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
@@ -55,7 +55,7 @@ public class ExtendedService extends DefaultService {
     public ConcertDTO createConcert(ConcertDTO concertDTO) {
         try {
             Response res = _client // Ask service to create concert
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts")
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/concerts")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
@@ -83,7 +83,7 @@ public class ExtendedService extends DefaultService {
     public PerformerDTO addImage(PerformerDTO performerDTO) {
         try {
             Response res = _client
-                    .target(Config.LOCAL_SERVER_ADDRESS + "/resources/images")
+                    .target(Config.LOCAL_SERVER_ADDRESS + "/images")
                     .request()
                     .header("Authorization", _authorizationToken) // Insert authorisation token
                     .accept(MediaType.APPLICATION_XML)
@@ -104,7 +104,7 @@ public class ExtendedService extends DefaultService {
 
 
     public void subscribeToNewPerformers(Subscription subscription) {
-        AsyncInvoker invoker = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers/getNotifications")
+        AsyncInvoker invoker = _client.target(Config.LOCAL_SERVER_ADDRESS + "/performers/getNotifications")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
@@ -126,7 +126,7 @@ public class ExtendedService extends DefaultService {
 
     public void subscribeToNewConcerts(Subscription subscription) {
         AsyncInvoker invoker = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts/getNotifications")
+                .target(Config.LOCAL_SERVER_ADDRESS + "/concerts/getNotifications")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
@@ -148,7 +148,7 @@ public class ExtendedService extends DefaultService {
 
     public void subscribeToNewImages(Subscription subscription) {
         AsyncInvoker invoker = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/images/getNotifications/")
+                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
@@ -171,7 +171,7 @@ public class ExtendedService extends DefaultService {
 
     public void subscribeToNewImagesForPerformer(PerformerDTO performerDTO, Subscription subscription) {
         AsyncInvoker invoker = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/resources/images/getNotifications/" + performerDTO.getId())
+                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/" + performerDTO.getId())
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
