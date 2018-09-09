@@ -34,6 +34,7 @@ public class ConcertApplication extends Application {
         _singletons.add(SubscriptionManager.instance());
         _classes.add(ConcertResource.class);
         _classes.add(PerformerResource.class);
+        _classes.add(UserResource.class);
     }
 
     @Override
