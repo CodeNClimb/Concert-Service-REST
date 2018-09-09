@@ -10,10 +10,7 @@ import nz.ac.auckland.concert.service.util.TheatreUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.NoResultException;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -99,6 +96,8 @@ public class ReserveResource {
                     "SELECT s FROM Booking b JOIN b.reservation r JOIN r.concert c JOIN r.seats s WHERE c.id = :concertId AND r.date = :date", SeatReservation.class);
             unavailableSeatsBookingQuery.setParameter("concertId", requestDto.getConcertId());
             unavailableSeatsBookingQuery.setParameter("date",  requestDto.getDate());
+            // Check for a change in version upon commit, fine to have only optimistic as not writing to it
+            unavailableSeatsBookingQuery.setLockMode(LockModeType.OPTIMISTIC);
             List<SeatReservation> seatsBooked = unavailableSeatsBookingQuery.getResultList();
 
             // Add all seats found in returned bookings to current unavailable seats
@@ -110,6 +109,8 @@ public class ReserveResource {
             unavailableSeatsReservationQuery.setParameter("concertId", requestDto.getConcertId());
             unavailableSeatsReservationQuery.setParameter("date", requestDto.getDate());
             unavailableSeatsReservationQuery.setParameter("currentTime", LocalDateTime.now());
+            // Ensure version is incremented after this read, need this level because this table is written to at the end of this tx.
+            unavailableSeatsReservationQuery.setLockMode(LockModeType.OPTIMISTIC_FORCE_INCREMENT);
             List<SeatReservation> seatsCurrentlyReserved = unavailableSeatsReservationQuery.getResultList();
 
             // Add all seats found in returned active reservations to current unavailable seats
@@ -199,6 +200,8 @@ public class ReserveResource {
 
             TypedQuery<Reservation> reservationQuery = em.createQuery("SELECT r FROM Token t JOIN t.user u JOIN u.reservation r WHERE t.token = :token", Reservation.class);
             reservationQuery.setParameter("token", authToken);
+            // Optimistic force increment to ensure no other user reserves these seats after they time out and before this book is committed.
+            reservationQuery.setLockMode(LockModeType.OPTIMISTIC_FORCE_INCREMENT);
             Reservation foundReservation = reservationQuery.getSingleResult(); // Get reservation for that user (obviously only one allowed at any one time)
 
             // Check if reservation has expired
@@ -210,7 +213,7 @@ public class ReserveResource {
             }
 
             Booking newBooking = new Booking(foundReservation, findUser(authToken, em));
-            em.persist(newBooking);
+            em.persist(newBooking); // This ensures increment of version number for booking table
             tx.commit(); // End of atomic operation
             _logger.info("Created booking for concert id: " +
                     reservationDto.getReservationRequest().getConcertId() + " on date: " + reservationDto.getReservationRequest().getDate() +

@@ -25,6 +25,9 @@ public class Booking {
     @JoinColumn(name = "USER_ID")
     private User user;
 
+    @Version
+    private long version;
+
     public Reservation getReservation() {
         return reservation;
     }

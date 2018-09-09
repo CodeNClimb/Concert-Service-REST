@@ -47,6 +47,9 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private PriceBand priceBand;
 
+    @Version
+    private long version;
+
     public long getId() {
         return id;
     }
