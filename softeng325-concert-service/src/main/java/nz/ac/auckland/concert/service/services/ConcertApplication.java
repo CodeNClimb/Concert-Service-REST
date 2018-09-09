@@ -36,6 +36,7 @@ public class ConcertApplication extends Application {
         _classes.add(PerformerResource.class);
         _classes.add(UserResource.class);
         _classes.add(ReserveResource.class);
+        _classes.add(ImageResource.class);
     }
 
     @Override
