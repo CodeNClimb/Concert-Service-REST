@@ -6,7 +6,6 @@ import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
 import nz.ac.auckland.concert.service.domain.Performer;
 import nz.ac.auckland.concert.service.domain.Token;
 import nz.ac.auckland.concert.service.domain.Types.SubscriptionType;
-import nz.ac.auckland.concert.service.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,13 +20,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Path("/performers")
 public class PerformerResource {
 
-    private static final Logger _logger = LoggerFactory.getLogger(ConcertResource.class);
+    private static final Logger _logger = LoggerFactory.getLogger(PerformerResource.class);
 
     @Context // Information about the service hosted URI
     private static UriInfo _uri;

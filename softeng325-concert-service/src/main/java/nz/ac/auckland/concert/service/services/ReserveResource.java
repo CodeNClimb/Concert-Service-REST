@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Path("/reserve")
 public class ReserveResource {
 
-    private static final Logger _logger = LoggerFactory.getLogger(ConcertResource.class);
+    private static final Logger _logger = LoggerFactory.getLogger(ReserveResource.class);
 
     private static final long RESERVATION_TIMEOUT_MILLIS = 1000; // 1 second
 

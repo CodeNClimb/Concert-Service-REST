@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @Path("/users")
 public class UserResource {
 
-    private static final Logger _logger = LoggerFactory.getLogger(ConcertResource.class);
+    private static final Logger _logger = LoggerFactory.getLogger(UserResource.class);
 
     private static final long AUTHENTICATION_TIMEOUT_MINUTES = 5; // 5 minutes
 

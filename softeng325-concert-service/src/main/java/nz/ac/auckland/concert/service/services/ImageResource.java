@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @Path("/images")
 public class ImageResource {
 
-    private static final Logger _logger = LoggerFactory.getLogger(ConcertResource.class);
+    private static final Logger _logger = LoggerFactory.getLogger(ImageResource.class);
 
     @Context // Information about the service hosted URI
     private static UriInfo _uri;

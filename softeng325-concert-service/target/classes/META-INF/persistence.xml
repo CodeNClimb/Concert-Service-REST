@@ -23,8 +23,13 @@
 	     
 	<persistence-unit name="nz.ac.auckland.concert">
 		<!-- Specify each class to map using a class element -->
+		<class>service.domain.Booking</class>
 		<class>service.domain.Concert</class>
+		<class>service.domain.CreditCard</class>
 		<class>service.domain.Performer</class>
+		<class>service.domain.Reservation</class>
+		<class>service.domain.SeatReservation</class>
+		<class>service.domain.Token</class>
 		<class>service.domain.User</class>
 
 		<properties>
