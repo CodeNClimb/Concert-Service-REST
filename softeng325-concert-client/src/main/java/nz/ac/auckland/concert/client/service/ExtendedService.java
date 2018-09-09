@@ -20,11 +20,8 @@ import javax.ws.rs.core.Response;
  */
 public class ExtendedService extends DefaultService {
 
-    private boolean _staySubscribed;
-
     public ExtendedService() {
         _client = Config.POOLED_CLIENT;
-        _staySubscribed = false;
     }
 
     public PerformerDTO createPerformer(PerformerDTO performerDTO) {
@@ -107,7 +104,6 @@ public class ExtendedService extends DefaultService {
 
 
     public void subscribeToNewPerformers(Subscription subscription) {
-        _staySubscribed = true;
         AsyncInvoker invoker = _client.target(Config.LOCAL_SERVER_ADDRESS + "/resources/performers/getNotifications")
                 .request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
@@ -117,24 +113,18 @@ public class ExtendedService extends DefaultService {
         invoker.get(new InvocationCallback<String>() {
             @Override
             public void completed(String s) {
-                if (_staySubscribed) {
                     subscription.updateSubscription(s);
                     invoker.get(this);
-                }
             }
 
             @Override
             public void failed(Throwable throwable) {
-                if (_staySubscribed) {
-                    throwable.printStackTrace();
-                    invoker.get(this);
-                }
+
             }
         });
     }
 
     public void subscribeToNewConcerts(Subscription subscription) {
-        _staySubscribed = true;
         AsyncInvoker invoker = _client
                 .target(Config.LOCAL_SERVER_ADDRESS + "/resources/concerts/getNotifications")
                 .request()
@@ -145,24 +135,18 @@ public class ExtendedService extends DefaultService {
         invoker.get(new InvocationCallback<String>() {
             @Override
             public void completed(String s) {
-                if (_staySubscribed) {
                     subscription.updateSubscription(s);
                     invoker.get(this);
-                }
             }
 
             @Override
             public void failed(Throwable throwable) {
-                if (_staySubscribed) {
-                    throwable.printStackTrace();
-                    invoker.get(this);
-                }
+
             }
         });
     }
 
     public void subscribeToNewImages(Subscription subscription) {
-        _staySubscribed = true;
         AsyncInvoker invoker = _client
                 .target(Config.LOCAL_SERVER_ADDRESS + "/resources/images/getNotifications/")
                 .request()
@@ -173,18 +157,13 @@ public class ExtendedService extends DefaultService {
         invoker.get(new InvocationCallback<String>() {
             @Override
             public void completed(String s) {
-                if (_staySubscribed) {
                     subscription.updateSubscription(s);
                     invoker.get(this);
-                }
             }
 
             @Override
             public void failed(Throwable throwable) {
-                if (_staySubscribed) {
-                    throwable.printStackTrace();
-                    invoker.get(this);
-                }
+
             }
         });
 
@@ -201,23 +180,15 @@ public class ExtendedService extends DefaultService {
         invoker.get(new InvocationCallback<String>() {
             @Override
             public void completed(String s) {
-                if (_staySubscribed) {
                     subscription.updateSubscription(s);
                     invoker.get(this);
-                }
             }
 
             @Override
             public void failed(Throwable throwable) {
-                if (_staySubscribed) {
-                    throwable.printStackTrace();
-                    invoker.get(this);
-                }
+
             }
         });
-    }
-
-    public void unsubscribe() {
     }
 
 }

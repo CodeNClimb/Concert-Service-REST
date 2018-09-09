@@ -10,7 +10,7 @@ public class Subscription {
     private boolean _isUpdated;
 
     public Subscription() {
-        _isUpdated = true;
+        _isUpdated = false;
     }
 
     public void updateSubscription(String message) {
@@ -19,6 +19,7 @@ public class Subscription {
     }
 
     public String getSubscription() {
+        _isUpdated = false;
         return _notification;
     }
 

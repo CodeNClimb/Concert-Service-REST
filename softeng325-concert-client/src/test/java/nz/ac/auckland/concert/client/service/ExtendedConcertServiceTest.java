@@ -174,7 +174,7 @@ public class ExtendedConcertServiceTest {
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertTrue(subscription.getSubscription().contains("Heres a test!"));
             System.out.println(subscription.getSubscription());
-            System.exit(0);
+
         } catch(ServiceException e) {
             fail();
         }
@@ -200,14 +200,14 @@ public class ExtendedConcertServiceTest {
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertTrue(subscription.getSubscription().contains("test.jpg"));
             System.out.println(subscription.getSubscription());
-            System.exit(0);
+
         } catch(ServiceException e) {
             fail();
         }
     }
 
     @Test
-    public void testSubscribeToNewImagesWithPerformer() {
+    public void testSubscribeToNewImagesWithPerformer() throws InterruptedException {
         try {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
@@ -227,9 +227,9 @@ public class ExtendedConcertServiceTest {
             service.addImage(newPerformer);
 
             Assert.assertTrue(subscription.isUnreadNotification());
-            Assert.assertTrue(subscription.getSubscription().contains("text.jpg"));
+            Assert.assertTrue(subscription.getSubscription().contains("test.jpg"));
             System.out.println(subscription.getSubscription());
-            System.exit(0);
+
         } catch(ServiceException e) {
             fail();
         }

@@ -115,7 +115,6 @@ public class SubscriptionManager {
 
                 for (AsyncResponse response : _imageResponsesWithIds.get(id)) {
                     response.resume("A new image " + performer.getImageName() + " has been added for " + performer.getName());
-
                 }
                 _imageResponsesWithIds.get(id).clear();
             }
