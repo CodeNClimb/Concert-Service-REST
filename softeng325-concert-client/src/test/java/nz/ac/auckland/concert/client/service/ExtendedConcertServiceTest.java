@@ -35,7 +35,6 @@ public class ExtendedConcertServiceTest {
 
     private static final int SERVER_PORT = 10000;
     private static final String WEB_SERVICE_CLASS_NAME = ConcertApplication.class.getName();
-    private static final int RESERVATION_EXPIRY_TIME_IN_SECONDS = 5;
 
     private static Client _client;
     private static Server _server;
