@@ -90,7 +90,7 @@ public class ConcertServiceTest {
 	public void stopServer() throws Exception {
 		_server.stop();
 	}
-	
+
 	@Test
 	public void testRetrieveConcerts() {
 		final int numberOfConcerts = 25;

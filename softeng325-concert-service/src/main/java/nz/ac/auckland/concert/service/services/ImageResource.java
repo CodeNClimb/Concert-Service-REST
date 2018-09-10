@@ -1,5 +1,13 @@
 package nz.ac.auckland.concert.service.services;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.util.IOUtils;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 import nz.ac.auckland.concert.service.domain.Mappers.PerformerMapper;
@@ -15,16 +23,21 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 
 @Path("/images")
 public class ImageResource {
+
+    // AWS S3 access credentials for concert images.
+    protected static final String AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
+    protected static final String AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
+
+    // Name of the S3 bucket that stores images.
+    protected static final String AWS_BUCKET = Config.AWS_BUCKET;
 
     private static final Logger _logger = LoggerFactory.getLogger(ImageResource.class);
 
@@ -38,6 +51,40 @@ public class ImageResource {
 
         _pm = PersistenceManager.instance();
         _sm = SubscriptionManager.instance();
+    }
+
+    @GET
+    @Produces("image/png")
+    @Path("/{imageName}")
+    public Response getImage(
+            @HeaderParam("user-agent") String userAgent,
+            @PathParam("imageName") String imageName) {
+
+        try {
+            BasicAWSCredentials awsCredentials = new BasicAWSCredentials(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
+            AmazonS3 s3 = AmazonS3ClientBuilder
+                    .standard()
+                    .withRegion(Regions.AP_SOUTHEAST_2)
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                    .build();
+
+            S3Object object = s3.getObject(AWS_BUCKET, imageName);
+            byte[] byteArray = IOUtils.toByteArray(object.getObjectContent());
+
+            _logger.info("Successfully downloaded " + imageName + " from AWS.");
+
+            return Response
+                    .status(Response.Status.OK)
+                    .entity((StreamingOutput) outputStream -> {
+                        outputStream.write(byteArray);
+                        outputStream.flush();
+                    })
+                    .build();
+        } catch (AmazonS3Exception e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(Messages.NO_IMAGE_FOR_PERFORMER).build();
+        } catch (IOException e) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(Messages.SERVICE_COMMUNICATION_ERROR).build();
+        }
     }
 
     /**

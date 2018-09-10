@@ -1,13 +1,5 @@
 package nz.ac.auckland.concert.client.service;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import nz.ac.auckland.concert.common.dto.*;
 import nz.ac.auckland.concert.common.message.Messages;
 
@@ -20,6 +12,8 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.awt.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,14 +27,7 @@ import java.util.Set;
 public class DefaultService implements ConcertService {
 
     // Constants:
-    // AWS S3 access credentials for concert images.
-    protected static final String AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID;
-    protected static final String AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY;
-
     protected static final int RETRIEVE_WINDOW_SIZE = 10;
-
-    // Name of the S3 bucket that stores images.
-    protected static final String AWS_BUCKET = Config.AWS_BUCKET;
 
     // Fields
     protected Client _client;
@@ -163,24 +150,20 @@ public class DefaultService implements ConcertService {
     public Image getImageForPerformer(PerformerDTO performer) throws ServiceException {
 
         try {
-            BasicAWSCredentials awsCredentials = new BasicAWSCredentials(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
-            AmazonS3 s3 = AmazonS3ClientBuilder
-                    .standard()
-                    .withRegion(Regions.AP_SOUTHEAST_2)
-                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-                    .build();
+            Response res = _client.target(Config.LOCAL_SERVER_ADDRESS + "/images/" + performer.getImageName()).request()
+                    .accept("image/png").get();
 
-            S3Object object;
-            try {
-                object = s3.getObject(AWS_BUCKET, performer.getImageName());
-            } catch (AmazonS3Exception e) {
-                throw new ServiceException(Messages.NO_IMAGE_FOR_PERFORMER);
+            switch(res.getStatus()) {
+                case 404: throw new ServiceException(res.readEntity(String.class));
+                case 503: throw new ServiceException(res.readEntity(String.class));
             }
-            S3ObjectInputStream s3is = object.getObjectContent();
 
-            return ImageIO.read(s3is);
-        } catch (Exception e) {
+            byte[] byteArray = res.readEntity(byte[].class);
+            return ImageIO.read(new ByteArrayInputStream(byteArray));
+        } catch (IOException e) { // Couldn't read file
             throw new ServiceException(Messages.SERVICE_COMMUNICATION_ERROR);
+        } finally {
+
         }
     }
 
