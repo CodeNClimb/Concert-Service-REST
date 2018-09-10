@@ -207,15 +207,4 @@ public class ConcertResource {
         // True if token isn't null and its expiry time is after the current time
         return token != null && !LocalDateTime.now().isAfter(token.getExpiry());
     }
-
-    private User findUser(String authToken, EntityManager em) {
-
-        TypedQuery<User> userQuery = em.createQuery("SELECT u FROM Token t JOIN t.user u WHERE t.token = :token", User.class);
-        userQuery.setParameter("token", authToken);
-        return userQuery.getSingleResult();
-    }
-
-    private String generateUserToken() {
-        return UUID.randomUUID().toString();
-    }
 }
