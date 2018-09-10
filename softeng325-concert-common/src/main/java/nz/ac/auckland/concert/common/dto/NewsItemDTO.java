@@ -38,7 +38,7 @@ public class NewsItemDTO {
         this.cookie = cookie;
     }
 
-    public List<String> getNotification() {
+    public List<String> getNotifications() {
         return notification;
     }
 

@@ -176,7 +176,8 @@ public class ExtendedConcertServiceTest {
             service.createConcert(concertDTO);
 
             Assert.assertTrue(subscription.isUnreadNotification());
-            Assert.assertTrue(subscription.getSubscription().contains("Heres a test!"));
+            Assert.assertEquals(1, subscription.getSubscription().size());
+            Assert.assertTrue(subscription.getSubscription().get(0).contains("Heres a test!"));
             System.out.println(subscription.getSubscription());
 
         } catch(ServiceException e) {
