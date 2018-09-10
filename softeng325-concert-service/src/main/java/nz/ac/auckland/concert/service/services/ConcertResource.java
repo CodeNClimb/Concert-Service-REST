@@ -181,7 +181,8 @@ public class ConcertResource {
     public void waitForNewConcerts(
             @Suspended AsyncResponse response,
             @HeaderParam("user-agent") String userAgent,
-            @HeaderParam("Authorization") String authToken) {
+            @HeaderParam("Authorization") String authToken,
+            @CookieParam("latest-news") String newsCookie) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -189,7 +190,7 @@ public class ConcertResource {
         }
 
         // Add AsyncResponse to subscribers for subscription type
-        _sm.addSubscription(SubscriptionType.CONCERT, response);
+        _sm.addSubscription(SubscriptionType.CONCERT, response, newsCookie);
         _logger.info("Subscriber added for new concerts");
     }
 

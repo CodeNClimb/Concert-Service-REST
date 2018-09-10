@@ -109,28 +109,32 @@ public class ExtendedConcertServiceTest {
             service.createPerformer(newPerformer);
 
             Assert.assertTrue(subscription.isUnreadNotification());
-            Assert.assertTrue(subscription.getSubscription().contains("Tyga"));
+            Assert.assertEquals(1, subscription.getSubscription().size());
+            Assert.assertTrue(subscription.getSubscription().get(0).contains("Tyga"));
             System.out.println(subscription.getSubscription());
 
             PerformerDTO newPerformer2 = new PerformerDTO(null, "Ravid Aharon", null, null, new HashSet<>());
             service.createPerformer(newPerformer2);
 
             Assert.assertTrue(subscription.isUnreadNotification());
-            Assert.assertTrue(subscription.getSubscription().contains("Ravid Aharon"));
+            Assert.assertEquals(1, subscription.getSubscription().size());
+            Assert.assertTrue(subscription.getSubscription().get(0).contains("Ravid Aharon"));
             System.out.println(subscription.getSubscription());
 
             PerformerDTO newPerformer3 = new PerformerDTO(null, "Stars of the Lid", null, null, new HashSet<>());
             service.createPerformer(newPerformer3);
 
             Assert.assertTrue(subscription.isUnreadNotification());
-            Assert.assertTrue(subscription.getSubscription().contains("Stars of the Lid"));
+            Assert.assertEquals(1, subscription.getSubscription().size());
+            Assert.assertTrue(subscription.getSubscription().get(0).contains("Stars of the Lid"));
             System.out.println(subscription.getSubscription());
 
             PerformerDTO newPerformer4 = new PerformerDTO(null, "Aphex Twin", null, null, new HashSet<>());
             service.createPerformer(newPerformer4);
 
             Assert.assertTrue(subscription.isUnreadNotification());
-            Assert.assertTrue(subscription.getSubscription().contains("Aphex Twin"));
+            Assert.assertEquals(1, subscription.getSubscription().size());
+            Assert.assertTrue(subscription.getSubscription().get(0).contains("Aphex Twin"));
             System.out.println(subscription.getSubscription());
 
         } catch(ServiceException e) {

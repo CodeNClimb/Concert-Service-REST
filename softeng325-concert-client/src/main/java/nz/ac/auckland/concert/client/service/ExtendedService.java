@@ -2,15 +2,15 @@ package nz.ac.auckland.concert.client.service;
 
 import nz.ac.auckland.concert.client.clientApp.Subscription;
 import nz.ac.auckland.concert.common.dto.ConcertDTO;
+import nz.ac.auckland.concert.common.dto.NewsItemDTO;
 import nz.ac.auckland.concert.common.dto.PerformerDTO;
 import nz.ac.auckland.concert.common.message.Messages;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ServiceUnavailableException;
-import javax.ws.rs.client.AsyncInvoker;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 /**
@@ -104,17 +104,22 @@ public class ExtendedService extends DefaultService {
 
 
     public void subscribeToNewPerformers(Subscription subscription) {
-        AsyncInvoker invoker = _client.target(Config.LOCAL_SERVER_ADDRESS + "/performers/getNotifications")
-                .request()
+        WebTarget target = _client.target(Config.LOCAL_SERVER_ADDRESS + "/performers/getNotifications");
+
+        target.request()
                 .header("Authorization", _authorizationToken) // Insert authorisation token
                 .accept(MediaType.APPLICATION_XML)
-                .async();
-
-        invoker.get(new InvocationCallback<String>() {
+                .async()
+                .get(new InvocationCallback<NewsItemDTO>() {
             @Override
-            public void completed(String s) {
-                    subscription.updateSubscription(s);
-                    invoker.get(this);
+            public void completed(NewsItemDTO newsItemDTO) {
+                subscription.updateSubscription(newsItemDTO.getNotification());
+                target.request()
+                        .header("Authorization", _authorizationToken) // Insert authorisation token
+                        .accept(MediaType.APPLICATION_XML)
+                        .cookie(new NewCookie("latest-news", newsItemDTO.getCookie()))
+                        .async()
+                        .get(this);
             }
 
             @Override
@@ -125,70 +130,70 @@ public class ExtendedService extends DefaultService {
     }
 
     public void subscribeToNewConcerts(Subscription subscription) {
-        AsyncInvoker invoker = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/concerts/getNotifications")
-                .request()
-                .header("Authorization", _authorizationToken) // Insert authorisation token
-                .accept(MediaType.APPLICATION_XML)
-                .async();
-
-        invoker.get(new InvocationCallback<String>() {
-            @Override
-            public void completed(String s) {
-                    subscription.updateSubscription(s);
-                    invoker.get(this);
-            }
-
-            @Override
-            public void failed(Throwable throwable) {
-
-            }
-        });
+//        AsyncInvoker invoker = _client
+//                .target(Config.LOCAL_SERVER_ADDRESS + "/concerts/getNotifications")
+//                .request()
+//                .header("Authorization", _authorizationToken) // Insert authorisation token
+//                .accept(MediaType.APPLICATION_XML)
+//                .async();
+//
+//        invoker.get(new InvocationCallback<String>() {
+//            @Override
+//            public void completed(String s) {
+//                    subscription.updateSubscription(s);
+//                    invoker.get(this);
+//            }
+//
+//            @Override
+//            public void failed(Throwable throwable) {
+//
+//            }
+//        });
     }
 
     public void subscribeToNewImages(Subscription subscription) {
-        AsyncInvoker invoker = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/")
-                .request()
-                .header("Authorization", _authorizationToken) // Insert authorisation token
-                .accept(MediaType.APPLICATION_XML)
-                .async();
-
-        invoker.get(new InvocationCallback<String>() {
-            @Override
-            public void completed(String s) {
-                    subscription.updateSubscription(s);
-                    invoker.get(this);
-            }
-
-            @Override
-            public void failed(Throwable throwable) {
-
-            }
-        });
+//        AsyncInvoker invoker = _client
+//                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/")
+//                .request()
+//                .header("Authorization", _authorizationToken) // Insert authorisation token
+//                .accept(MediaType.APPLICATION_XML)
+//                .async();
+//
+//        invoker.get(new InvocationCallback<String>() {
+//            @Override
+//            public void completed(String s) {
+//                    subscription.updateSubscription(s);
+//                    invoker.get(this);
+//            }
+//
+//            @Override
+//            public void failed(Throwable throwable) {
+//
+//            }
+//        });
 
     }
 
     public void subscribeToNewImagesForPerformer(PerformerDTO performerDTO, Subscription subscription) {
-        AsyncInvoker invoker = _client
-                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/" + performerDTO.getId())
-                .request()
-                .header("Authorization", _authorizationToken) // Insert authorisation token
-                .accept(MediaType.APPLICATION_XML)
-                .async();
-
-        invoker.get(new InvocationCallback<String>() {
-            @Override
-            public void completed(String s) {
-                    subscription.updateSubscription(s);
-                    invoker.get(this);
-            }
-
-            @Override
-            public void failed(Throwable throwable) {
-
-            }
-        });
+//        AsyncInvoker invoker = _client
+//                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/" + performerDTO.getId())
+//                .request()
+//                .header("Authorization", _authorizationToken) // Insert authorisation token
+//                .accept(MediaType.APPLICATION_XML)
+//                .async();
+//
+//        invoker.get(new InvocationCallback<String>() {
+//            @Override
+//            public void completed(String s) {
+//                    subscription.updateSubscription(s);
+//                    invoker.get(this);
+//            }
+//
+//            @Override
+//            public void failed(Throwable throwable) {
+//
+//            }
+//        });
     }
 
 }

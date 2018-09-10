@@ -175,14 +175,15 @@ public class PerformerResource {
     public void waitForNewPerformers(
             @Suspended AsyncResponse response,
             @HeaderParam("user-agent") String userAgent,
-            @HeaderParam("Authorization") String authToken) {
+            @HeaderParam("Authorization") String authToken,
+            @CookieParam("latest-news") String newsCookie) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
             response.resume(Messages.UNAUTHENTICATED_REQUEST);
         }
 
-        _sm.addSubscription(SubscriptionType.PERFORMER, response);
+        _sm.addSubscription(SubscriptionType.PERFORMER, response, newsCookie);
         _logger.info("Subscriber added for new performers");
     }
 
