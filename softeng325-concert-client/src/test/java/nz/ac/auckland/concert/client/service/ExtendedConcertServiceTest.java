@@ -92,7 +92,7 @@ public class ExtendedConcertServiceTest {
     }
 
     @Test
-    public void testPerformerSubscription() {
+    public void testPerformerSubscription() throws InterruptedException {
         try {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
@@ -108,6 +108,8 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer = new PerformerDTO(null, "Tyga", null, null, new HashSet<>());
             service.createPerformer(newPerformer);
 
+            Thread.sleep(500); // Ensure subscription object is updated
+
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());
             Assert.assertTrue(subscription.getSubscription().get(0).contains("Tyga"));
@@ -115,6 +117,8 @@ public class ExtendedConcertServiceTest {
 
             PerformerDTO newPerformer2 = new PerformerDTO(null, "Ravid Aharon", null, null, new HashSet<>());
             service.createPerformer(newPerformer2);
+
+            Thread.sleep(500); // Ensure subscription object is updated
 
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());
@@ -124,6 +128,8 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer3 = new PerformerDTO(null, "Stars of the Lid", null, null, new HashSet<>());
             service.createPerformer(newPerformer3);
 
+            Thread.sleep(500); // Ensure subscription object is updated
+
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());
             Assert.assertTrue(subscription.getSubscription().get(0).contains("Stars of the Lid"));
@@ -131,6 +137,8 @@ public class ExtendedConcertServiceTest {
 
             PerformerDTO newPerformer4 = new PerformerDTO(null, "Aphex Twin", null, null, new HashSet<>());
             service.createPerformer(newPerformer4);
+
+            Thread.sleep(500); // Ensure subscription object is updated
 
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());
@@ -143,7 +151,7 @@ public class ExtendedConcertServiceTest {
     }
 
     @Test
-    public void testConcertSubscription() {
+    public void testConcertSubscription() throws InterruptedException {
         try {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
@@ -175,6 +183,8 @@ public class ExtendedConcertServiceTest {
                     performers);
             service.createConcert(concertDTO);
 
+            Thread.sleep(500); // Ensure subscription object is updated
+
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());
             Assert.assertTrue(subscription.getSubscription().get(0).contains("Heres a test!"));
@@ -186,7 +196,7 @@ public class ExtendedConcertServiceTest {
     }
 
     @Test
-    public void testSubscribeToNewImages() {
+    public void testSubscribeToNewImages() throws InterruptedException {
         try {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
@@ -202,6 +212,8 @@ public class ExtendedConcertServiceTest {
             PerformerDTO newPerformer = new PerformerDTO(1L, null, "test.jpg", null, new HashSet<>());
             service.addImage(newPerformer);
 
+            Thread.sleep(500); // Ensure subscription object is updated
+
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());
             Assert.assertTrue(subscription.getSubscription().get(0).contains("test.jpg"));
@@ -213,7 +225,7 @@ public class ExtendedConcertServiceTest {
     }
 
     @Test
-    public void testSubscribeToNewImagesWithPerformer() {
+    public void testSubscribeToNewImagesWithPerformer() throws InterruptedException {
         try {
             UserDTO userDTO = new UserDTO("Bulldog", "123", "Churchill", "Winston");
             _service.createUser(userDTO);
@@ -231,6 +243,8 @@ public class ExtendedConcertServiceTest {
 
             PerformerDTO newPerformer = new PerformerDTO(1L, null, "test.jpg", null, new HashSet<>());
             service.addImage(newPerformer);
+
+            Thread.sleep(500); // Ensure subscription object is updated
 
             Assert.assertTrue(subscription.isUnreadNotification());
             Assert.assertEquals(1, subscription.getSubscription().size());

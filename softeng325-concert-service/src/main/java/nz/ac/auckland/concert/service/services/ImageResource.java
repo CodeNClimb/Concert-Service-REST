@@ -139,7 +139,8 @@ public class ImageResource {
             @Suspended AsyncResponse response,
             @HeaderParam("user-agent") String userAgent,
             @HeaderParam("Authorization") String authToken,
-            @PathParam("id") String performerId) {
+            @PathParam("id") String performerId,
+            @CookieParam("latest-news") String newsCookie) {
 
         if (authToken == null) { // User has no access token
             _logger.info("Denied user agent: " + userAgent + "; No authentication token identified.");
@@ -147,7 +148,7 @@ public class ImageResource {
         }
 
         // Add AsyncResponse to subscribers for subscription type
-        _sm.addSubscriptionWithId(SubscriptionType.PERFORMER_IMAGE, response, Long.decode(performerId));
+        _sm.addSubscriptionWithId(SubscriptionType.PERFORMER_IMAGE, response, Long.decode(performerId), newsCookie);
         _logger.info("Subscriber added for new images for performer with id (" + performerId + ")");
     }
 

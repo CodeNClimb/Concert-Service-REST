@@ -84,11 +84,13 @@ public class SubscriptionManager {
 
     }
 
-    public void addSubscriptionWithId(SubscriptionType subscriptionType, AsyncResponse asyncResponse, Long id) {
+    public void addSubscriptionWithId(SubscriptionType subscriptionType, AsyncResponse asyncResponse, Long id, String newCookie) {
 
         if (subscriptionType == SubscriptionType.PERFORMER_IMAGE) {
             synchronized (_imageLock) {
-                _imageResponsesWithIds.computeIfAbsent(id, k -> new ArrayList<>());
+                _imageResponsesWithIds.computeIfAbsent(id, k -> new ArrayList<>()); // If map doesn't exist under id then create one
+
+                if (!updateIfUnseenNotifications(newCookie, _recentImageWithIdRecentNotifications.get(id), asyncResponse))
                 _imageResponsesWithIds.get(id).add(asyncResponse);
             }
         }
@@ -129,15 +131,15 @@ public class SubscriptionManager {
         if (subscriptionType == SubscriptionType.PERFORMER_IMAGE) {
             synchronized (_performerLock) {
                 Performer performer = (Performer)object;
+                String notification = "A new image " + performer.getImageName() + " has been added for " + performer.getName() + ", check it out at: " + url;
 
                 if (_imageResponsesWithIds.get(id) == null) {
                     return;
                 }
 
-                for (AsyncResponse response : _imageResponsesWithIds.get(id)) {
-                    response.resume("A new image " + performer.getImageName() + " has been added for " + performer.getName());
-                }
-                _imageResponsesWithIds.get(id).clear();
+                _recentImageWithIdRecentNotifications.computeIfAbsent(id, k -> new ArrayList<>());
+
+                storeAndRespond(notification, _recentImageWithIdRecentNotifications.get(id), _imageResponsesWithIds.get(id));
             }
         }
 

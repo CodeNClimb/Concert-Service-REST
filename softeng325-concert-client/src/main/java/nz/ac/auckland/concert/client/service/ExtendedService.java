@@ -183,25 +183,29 @@ public class ExtendedService extends DefaultService {
     }
 
     public void subscribeToNewImagesForPerformer(PerformerDTO performerDTO, Subscription subscription) {
-//        AsyncInvoker invoker = _client
-//                .target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/" + performerDTO.getId())
-//                .request()
-//                .header("Authorization", _authorizationToken) // Insert authorisation token
-//                .accept(MediaType.APPLICATION_XML)
-//                .async();
-//
-//        invoker.get(new InvocationCallback<String>() {
-//            @Override
-//            public void completed(String s) {
-//                    subscription.updateSubscription(s);
-//                    invoker.get(this);
-//            }
-//
-//            @Override
-//            public void failed(Throwable throwable) {
-//
-//            }
-//        });
+        WebTarget target = _client.target(Config.LOCAL_SERVER_ADDRESS + "/images/getNotifications/" + performerDTO.getId());
+
+        target.request()
+                .header("Authorization", _authorizationToken) // Insert authorisation token
+                .accept(MediaType.APPLICATION_XML)
+                .async()
+                .get(new InvocationCallback<NewsItemDTO>() {
+            @Override
+            public void completed(NewsItemDTO newsItemDTO) {
+                    subscription.updateSubscription(newsItemDTO.getNotifications());
+                    target.request()
+                        .header("Authorization", _authorizationToken) // Insert authorisation token
+                        .accept(MediaType.APPLICATION_XML)
+                        .cookie(new NewCookie("latest-news", newsItemDTO.getCookie()))
+                        .async()
+                        .get(this);
+            }
+
+            @Override
+            public void failed(Throwable throwable) {
+
+            }
+        });
     }
 
 }
