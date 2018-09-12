@@ -43,7 +43,7 @@ public class User {
     @JoinColumn(name = "RESERVATION", unique = true)
     private Reservation reservation;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Booking> bookings;
 
 

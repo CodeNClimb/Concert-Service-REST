@@ -27,6 +27,10 @@ import static org.junit.Assert.fail;
 
 /**
  * Test class for testing extended "optional" functionality found in ExtendedService sub-class.
+ *
+ * Please note that when run as a complete test suite there are occasional failed tests due to
+ * some configuration with the repeating client connections. Mostly running the test suite will
+ * work however. All tests are successful when run individually.
  */
 public class ExtendedConcertServiceTest {
 

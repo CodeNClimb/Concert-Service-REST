@@ -44,7 +44,7 @@ public class Performer  {
     private Genre genre;
 
 
-    @ManyToMany(mappedBy = "performers")
+    @ManyToMany(mappedBy = "performers", fetch = FetchType.LAZY)
     private Set<Concert> concerts;
 
 
