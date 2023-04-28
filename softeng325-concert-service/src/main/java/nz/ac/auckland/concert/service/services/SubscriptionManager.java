@@ -1,11 +1,12 @@
 package nz.ac.auckland.concert.service.services;
 
-import javafx.util.Pair;
+
 import nz.ac.auckland.concert.common.dto.NewsItemDTO;
 import nz.ac.auckland.concert.service.domain.Concert;
 import nz.ac.auckland.concert.service.domain.Performer;
 import nz.ac.auckland.concert.service.domain.Types.SubscriptionType;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.container.AsyncResponse;
@@ -33,10 +34,10 @@ public class SubscriptionManager {
     private Map<Long, List<AsyncResponse>> _imageResponsesWithIds;
 
     // Buffers of latest notifications
-    private List<Pair<Integer, String>> _recentPerformerNotifications;
-    private List<Pair<Integer, String>> _recentConcertNotifications;
-    private List<Pair<Integer, String>> _recentImageNotifications;
-    private Map<Long, List<Pair<Integer, String>>> _recentImageWithIdRecentNotifications;
+    private List<ImmutablePair<Integer, String>> _recentPerformerNotifications;
+    private List<ImmutablePair<Integer, String>> _recentConcertNotifications;
+    private List<ImmutablePair<Integer, String>> _recentImageNotifications;
+    private Map<Long, List<ImmutablePair<Integer, String>>> _recentImageWithIdRecentNotifications;
 
     protected SubscriptionManager() {
 
@@ -146,12 +147,12 @@ public class SubscriptionManager {
     }
 
     // Helper method for both storing recent notification in buffer and responding to all necessary respondents.
-    private void storeAndRespond(String notification, List<Pair<Integer, String>> notificationList, List<AsyncResponse> responseList) {
+    private void storeAndRespond(String notification, List<ImmutablePair<Integer, String>> notificationList, List<AsyncResponse> responseList) {
         // Create hashcode of new notification
         int hashed = new HashCodeBuilder(37,39).append(notification).toHashCode();
 
         // Add has notification pair to list, remove tail if over 100.
-        notificationList.add(0, new Pair<>(hashed, notification));
+        notificationList.add(0, new ImmutablePair<>(hashed, notification));
         if (notificationList.size() > 100)
             notificationList.remove(100);
 
@@ -162,19 +163,19 @@ public class SubscriptionManager {
         responseList.clear();
     }
 
-    private boolean updateIfUnseenNotifications(String newsCookie, List<Pair<Integer, String>> notificationList, AsyncResponse asyncResponse) {
+    private boolean updateIfUnseenNotifications(String newsCookie, List<ImmutablePair<Integer, String>> notificationList, AsyncResponse asyncResponse) {
         if (newsCookie != null && // Cookie actually exists
                 !notificationList.isEmpty() && // NotificationList actually has notifications in it
                 notificationList.get(0).getKey() != Integer.parseInt(newsCookie)) { // User isn't already up to date with latest notification
 
             for (int i = 0; i < notificationList.size(); i++) {
-                Pair<Integer, String> notification = notificationList.get(i);
+                ImmutablePair<Integer, String> notification = notificationList.get(i);
 
                 // If cookie equals the hashcode of some previous news story or we are at the end of the news
                 // buffer then create sublist of notifications and send
                 if (notification.getKey() == Integer.parseInt(newsCookie) || i == notificationList.size() - 1) {
-                    List<Pair<Integer, String>> unseenNotifications = notificationList.subList(0, i);
-                    List<String> notificationsToSend = unseenNotifications.stream().map(Pair::getValue).collect(Collectors.toList());
+                    List<ImmutablePair<Integer, String>> unseenNotifications = notificationList.subList(0, i);
+                    List<String> notificationsToSend = unseenNotifications.stream().map(ImmutablePair::getValue).collect(Collectors.toList());
 
                     int hashed = new HashCodeBuilder(37,39).append(notificationsToSend.get(0)).toHashCode(); // hashcode is now the most recent of this list
                     asyncResponse.resume(new NewsItemDTO(Integer.toString(hashed), notificationsToSend));
